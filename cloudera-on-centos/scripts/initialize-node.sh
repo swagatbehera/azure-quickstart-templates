@@ -20,6 +20,20 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
+echo "1 is ${1}" >> /tmp/initlog.out
+
+echo "1 is ${2}" >> /tmp/initlog.out
+
+echo "1 is ${3}" >> /tmp/initlog.out
+
+echo "1 is ${4}" >> /tmp/initlog.out
+
+echo "1 is ${5}" >> /tmp/initlog.out
+
+echo "1 is ${6}" >> /tmp/initlog.out
+
+echo "1 is ${7}" >> /tmp/initlog.out
+
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 
