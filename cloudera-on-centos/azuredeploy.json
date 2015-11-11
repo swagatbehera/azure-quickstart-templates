@@ -223,10 +223,10 @@
   },
   "variables": {
     "installCDH":"True",
-    "addressPrefix":"[parameters('addressPrefix')]",
-    "subnetPrefix":"[parameters('subnetPrefix')]",
-    "nodeAddressPrefix":"[parameters('nodeAddressPrefix')]",
-    "scriptsUri": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/cloudera-on-centos",
+    "addressPrefix":"10.0.0.0/24",
+    "subnetPrefix":"10.0.0.0/24",
+    "nodeAddressPrefix":"10.0.0.",
+    "scriptsUri": "https://raw.githubusercontent.com/AleksandrShulman/azure-quickstart-templates/deploy-dev/cloudera-on-centos",
     "storageAccount": {
       "prefix": "[parameters('storageAccountPrefix')]",
       "type": "[parameters('storageAccountType')]"
