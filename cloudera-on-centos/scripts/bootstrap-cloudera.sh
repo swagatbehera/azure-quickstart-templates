@@ -43,8 +43,23 @@ log() {
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 
-ManagementNode="${IPPREFIX}10:${NAMEPREFIX}-mn0.$NAMESUFFIX:${NAMEPREFIX}-mn0"
-mip=$(echo "$ManagementNode" | sed 's/:/ /' | sed 's/:/ /' | cut -d ' ' -f 1)
+### Assume /etc/hosts is correct and set
+# Get management node
+mip=$(while read p; do echo $p | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
+
+# Get non-CM nodes
+wip_string=''
+while read p; do
+
+  if [[ "$wip_string" != "" ]]; then
+
+    wip_string+=','
+  fi
+  wip_string+=$(echo $p | grep "azure" | grep -v local | grep -v "\-mn0" | cut -d' ' -f 1 );
+done < /etc/hosts
+
+log "mip: $mip"
+log "wip: $wip_string"
 
 log "set private key"
 #use the key from the key vault as the SSH private key
@@ -56,42 +71,9 @@ file="/home/$ADMINUSER/.ssh/id_rsa"
 key="/tmp/id_rsa.pem"
 openssl rsa -in $file -outform PEM > $key
 
-#Generate IP Addresses for the cloudera setup
-NODES=()
-
-let "NAMEEND=MASTERNODES-1"
-for i in $(seq 1 $NAMEEND)
-do 
-  let "IP=i+10"
-  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-mn$i.$NAMESUFFIX:${NAMEPREFIX}-mn$i")
-done
-
-let "DATAEND=DATANODES-1"
-for i in $(seq 0 $DATAEND)
-do 
-  let "IP=i+20"
-  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-dn$i.$NAMESUFFIX:${NAMEPREFIX}-dn$i")
-done
-
-IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
-
-wip_string=''
-OIFS=$IFS
-IFS=','
-for x in $NODE_IPS
-do
-  log "Workier IP: $x"
-  line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
-  wip_string+=$(echo "$line" | cut -d ' ' -f 1 | sed 's/$/,/')
-  log "current wip_string is: $wip_string"
-done
-IFS=${OIFS}
-worker_ip=$(echo "${wip_string%?}")
-log "Worker ip to be supplied to next script: $worker_ip"
-log "BEGIN: Starting detached script to finalize initialization"
 if [ "$INSTALLCDH" == "True" ]
 then
-  sh initialize-cloudera-server.sh "$CLUSTERNAME" "$key" "$mip" "$worker_ip" $HA $ADMINUSER $PASSWORD $CMUSER $CMPASSWORD $EMAILADDRESS $BUSINESSPHONE $FIRSTNAME $LASTNAME $JOBROLE $JOBFUNCTION $COMPANY>/dev/null 2>&1
+  sh initialize-cloudera-server.sh "$CLUSTERNAME" "$key" "$mip" "$wip_string" $HA $ADMINUSER $PASSWORD $CMUSER $CMPASSWORD $EMAILADDRESS $BUSINESSPHONE $FIRSTNAME $LASTNAME $JOBROLE $JOBFUNCTION $COMPANY>/dev/null 2>&1
 fi
 log "END: Detached script to finalize initialization running. PID: $!"
 
