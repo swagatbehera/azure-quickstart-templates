@@ -29,6 +29,20 @@ echo "5 is ${5}" >> /tmp/initlog.out
 echo "6 is ${6}" >> /tmp/initlog.out
 echo "7 is ${7}" >> /tmp/initlog.out
 
+# we are going to do something heinous here to pull down the key
+# we are going to swap out the /etc/resolv.conf file
+cp /etc/resolv.conf /tmp/old_resolv.conf
+echo "nameserver 172.18.64.15" > /etc/resolv.conf
+wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+chmod 400 ./id_rsa
+cp ./id_rsa /home/${ADMINUSER}/.ssh/
+mv ./id_rsa ~/.ssh/
+
+cp /tmp/old_resolv.conf /etc/resolv.conf
+cat /etc/resolv.conf
+
+# end of hack
+
 ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
@@ -64,21 +78,6 @@ echo "finished dn private ip discovery >> /tmp/initlog.out"
 
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
-
-
-#let "NAMEEND=MASTERNODES-1"
-#for i in $(seq 0 $NAMEEND)
-#do 
-#  let "IP=i+10"
-#  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-mn$i.$NAMESUFFIX:${NAMEPREFIX}-mn$i")
-#done
-
-#let "DATAEND=DATANODES-1"
-#for i in $(seq 0 $DATAEND)
-#do 
-#  let "IP=i+20"
-#  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-dn$i.$NAMESUFFIX:${NAMEPREFIX}-dn$i")
-#done
 
 OIFS=$IFS
 IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
