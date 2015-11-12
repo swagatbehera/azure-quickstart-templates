@@ -32,13 +32,18 @@ echo "7 is ${7}" >> /tmp/initlog.out
 ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
+#Generate IP Addresses for the cloudera setup
+NODES=()
+
 let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
-  x=${NAMEPREFIX}-mn$i.$NAMESUFFIX
+  x=${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}
   echo "x is: $x" >> /tmp/masternodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateMasterIps
+  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i " > /tmp/initlog.out"
+
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
 done
 
@@ -47,10 +52,11 @@ echo "finished nn private ip discovery >> /tmp/initlog.out"
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  x=${NAMEPREFIX}-dn$i.$NAMESUFFIX
+  x=${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}
   echo "x is: $x" >> /tmp/datanodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
+  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " > /tmp/initlog.out"
   NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
 done
 
@@ -59,8 +65,6 @@ echo "finished dn private ip discovery >> /tmp/initlog.out"
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 
-#Generate IP Addresses for the cloudera setup
-NODES=()
 
 #let "NAMEEND=MASTERNODES-1"
 #for i in $(seq 0 $NAMEEND)
@@ -82,6 +86,7 @@ IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
 IFS=','
 for x in $NODE_IPS
 do
+  echo "x as member of NODE_IPS is: $x" > /tmp/initlog.out
   line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
   echo "$line" >> /etc/hosts
 done
