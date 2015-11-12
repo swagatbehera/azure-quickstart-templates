@@ -20,19 +20,41 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
+## TODO: Remove
 echo "1 is ${1}" >> /tmp/initlog.out
+echo "2 is ${2}" >> /tmp/initlog.out
+echo "3 is ${3}" >> /tmp/initlog.out
+echo "4 is ${4}" >> /tmp/initlog.out
+echo "5 is ${5}" >> /tmp/initlog.out
+echo "6 is ${6}" >> /tmp/initlog.out
+echo "7 is ${7}" >> /tmp/initlog.out
 
-echo "1 is ${2}" >> /tmp/initlog.out
+ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
+echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
-echo "1 is ${3}" >> /tmp/initlog.out
+let "NAMEEND=MASTERNODES-1" || true
+for i in $(seq 0 $NAMEEND)
+do
+  x=${NAMEPREFIX}-mn$i.$NAMESUFFIX
+  echo "x is: $x" >> /tmp/masternodes
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo $privateIp >> /tmp/privateMasterIps
+  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
+done
 
-echo "1 is ${4}" >> /tmp/initlog.out
+echo "finished nn private ip discovery >> /tmp/initlog.out"
 
-echo "1 is ${5}" >> /tmp/initlog.out
+let "DATAEND=DATANODES-1" || true
+for i in $(seq 0 $DATAEND)
+do
+  x=${NAMEPREFIX}-dn$i.$NAMESUFFIX
+  echo "x is: $x" >> /tmp/datanodes
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo $privateIp >> /tmp/privateDataIps
+  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
+done
 
-echo "1 is ${6}" >> /tmp/initlog.out
-
-echo "1 is ${7}" >> /tmp/initlog.out
+echo "finished dn private ip discovery >> /tmp/initlog.out"
 
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
@@ -40,19 +62,19 @@ NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #Generate IP Addresses for the cloudera setup
 NODES=()
 
-let "NAMEEND=MASTERNODES-1"
-for i in $(seq 0 $NAMEEND)
-do 
-  let "IP=i+10"
-  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-mn$i.$NAMESUFFIX:${NAMEPREFIX}-mn$i")
-done
+#let "NAMEEND=MASTERNODES-1"
+#for i in $(seq 0 $NAMEEND)
+#do 
+#  let "IP=i+10"
+#  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-mn$i.$NAMESUFFIX:${NAMEPREFIX}-mn$i")
+#done
 
-let "DATAEND=DATANODES-1"
-for i in $(seq 0 $DATAEND)
-do 
-  let "IP=i+20"
-  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-dn$i.$NAMESUFFIX:${NAMEPREFIX}-dn$i")
-done
+#let "DATAEND=DATANODES-1"
+#for i in $(seq 0 $DATAEND)
+#do 
+#  let "IP=i+20"
+#  NODES+=("$IPPREFIX$IP:${NAMEPREFIX}-dn$i.$NAMESUFFIX:${NAMEPREFIX}-dn$i")
+#done
 
 OIFS=$IFS
 IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
