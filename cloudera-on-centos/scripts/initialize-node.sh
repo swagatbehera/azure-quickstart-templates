@@ -20,14 +20,6 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
-## TODO: Remove
-echo "1 is ${1}" >> /tmp/initlog.out
-echo "2 is ${2}" >> /tmp/initlog.out
-echo "3 is ${3}" >> /tmp/initlog.out
-echo "4 is ${4}" >> /tmp/initlog.out
-echo "5 is ${5}" >> /tmp/initlog.out
-echo "6 is ${6}" >> /tmp/initlog.out
-echo "7 is ${7}" >> /tmp/initlog.out
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
@@ -35,10 +27,17 @@ cp /etc/resolv.conf /tmp/old_resolv.conf
 echo "nameserver 172.18.64.15" > /etc/resolv.conf
 wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 chmod 400 ./id_rsa
-mv ./id_rsa ~/.ssh/
+cp ./id_rsa ~/.ssh/
+
+# Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
+# can get all the ssh credentials. TODO: 
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 cp /tmp/old_resolv.conf /etc/resolv.conf
 cat /etc/resolv.conf
+
+## Sleep 4 minutes until all hosts have the key installed
+sleep 4m
 
 echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
@@ -57,7 +56,7 @@ for i in $(seq 0 $NAMEEND)
 do
   x=${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}
   echo "x is: $x" >> /tmp/masternodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "$x : ${privateIp}" >> /tmp/privateMasterIps
   echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn${i}.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn${i} " >> /tmp/initlog.out"
 
@@ -173,9 +172,6 @@ myhostname=`hostname`
 fqdnstring=`python -c "import socket; print socket.getfqdn('$myhostname')"`
 sed -i "s/.*HOSTNAME.*/HOSTNAME=${fqdnstring}/g" /etc/sysconfig/network
 /etc/init.d/network restart
-
-# Add systest credential to authorized hosts list
-echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 #disable password authentication in ssh
 #sed -i "s/UsePAM\s*yes/UsePAM no/" /etc/ssh/sshd_config
