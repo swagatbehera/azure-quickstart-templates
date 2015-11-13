@@ -40,6 +40,9 @@ mv ./id_rsa ~/.ssh/
 cp /tmp/old_resolv.conf /etc/resolv.conf
 cat /etc/resolv.conf
 
+echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
+ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
+
 # end of hack
 
 ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
@@ -53,9 +56,9 @@ for i in $(seq 0 $NAMEEND)
 do
   x=${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}
   echo "x is: $x" >> /tmp/masternodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo $privateIp >> /tmp/privateMasterIps
-  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i " > /tmp/initlog.out"
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo "$x : ${privateIp}" >> /tmp/privateMasterIps
+  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn${i}.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn${i} " >> /tmp/initlog.out"
 
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
 done
@@ -69,7 +72,7 @@ do
   echo "x is: $x" >> /tmp/datanodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
-  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " > /tmp/initlog.out"
+  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " >> /tmp/initlog.out"
   NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
 done
 
@@ -84,7 +87,7 @@ IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
 IFS=','
 for x in $NODE_IPS
 do
-  echo "x as member of NODE_IPS is: $x" > /tmp/initlog.out
+  echo "x as member of NODE_IPS is: $x" >> /tmp/initlog.out
   line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
   echo "$line" >> /etc/hosts
 done
