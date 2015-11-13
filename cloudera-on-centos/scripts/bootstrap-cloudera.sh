@@ -73,6 +73,16 @@ log "set private key"
 
 key="/home/${ADMINUSER}/.ssh/id_rsa"
 
+# As a final act, we're going to go to each node in /etc/hosts and adjust the /etc/resolv.conf
+echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> /tmp/settingResolvConf.out
+while read p; 
+do
+  host=$(echo $p | grep "azure" | grep -v local | cut -d' ' -f 1)
+  echo "host: $host >> /tmp/settingResolvConf.out"
+  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee -a /etc/resolv.conf; hostname; cat /etc/resolv.conf"
+done < /etc/hosts
+echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
+
 if [ "$INSTALLCDH" == "True" ]
 then
   sh initialize-cloudera-server.sh "$CLUSTERNAME" "$key" "$mip" "$wip_string" $HA $ADMINUSER $PASSWORD $CMUSER $CMPASSWORD $EMAILADDRESS $BUSINESSPHONE $FIRSTNAME $LASTNAME $JOBROLE $JOBFUNCTION $COMPANY>/dev/null 2>&1
