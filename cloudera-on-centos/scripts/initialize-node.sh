@@ -36,8 +36,6 @@ echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQ
 cp /tmp/old_resolv.conf /etc/resolv.conf
 cat /etc/resolv.conf
 
-## Sleep 4 minutes until all hosts have the key installed
-sleep 4m
 
 echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
