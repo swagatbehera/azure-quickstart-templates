@@ -63,13 +63,15 @@ log "wip: $wip_string"
 
 log "set private key"
 #use the key from the key vault as the SSH private key
-openssl rsa -in /var/lib/waagent/*.prv -out /home/$ADMINUSER/.ssh/id_rsa
-chmod 600 /home/$ADMINUSER/.ssh/id_rsa
-chown $ADMINUSER /home/$ADMINUSER/.ssh/id_rsa
+#openssl rsa -in /var/lib/waagent/*.prv -out /home/$ADMINUSER/.ssh/id_rsa
+#chmod 600 /home/$ADMINUSER/.ssh/id_rsa
+#chown $ADMINUSER /home/$ADMINUSER/.ssh/id_rsa
 
-file="/home/$ADMINUSER/.ssh/id_rsa"
-key="/tmp/id_rsa.pem"
-openssl rsa -in $file -outform PEM > $key
+#file="/home/$ADMINUSER/.ssh/id_rsa"
+#key="/tmp/id_rsa.pem"
+#openssl rsa -in $file -outform PEM > $key
+
+key="/home/${ADMINUSER}/.ssh/id_rsa"
 
 if [ "$INSTALLCDH" == "True" ]
 then
