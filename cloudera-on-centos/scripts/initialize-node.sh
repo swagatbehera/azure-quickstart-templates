@@ -42,6 +42,7 @@ cat /etc/resolv.conf
 
 echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
+echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 
 # end of hack
 
@@ -70,7 +71,7 @@ for i in $(seq 0 $DATAEND)
 do
   x=${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}
   echo "x is: $x" >> /tmp/datanodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
   echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " >> /tmp/initlog.out"
   NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
