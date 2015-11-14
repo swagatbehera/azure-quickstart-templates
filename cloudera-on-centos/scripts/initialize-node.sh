@@ -136,7 +136,7 @@ sleep 10s
 
 ## end of hack
 
-echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
+echo "here is the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
 echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 
