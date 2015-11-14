@@ -107,7 +107,7 @@ if [[ "statusCode?" != 0 ]]; then
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
 
   # let's diagnose if it's a resolution issue
-  host github.mtv.cloudera.com
+  host -v github.mtv.cloudera.com
   if [[ "$?" != "0" ]]; then
     echo "We could not resolve the host"  >> /tmp/diagnostics.out
   else
