@@ -78,12 +78,26 @@ echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 echo "Running as `whoami` in `pwd`" >> /tmp/diagnostics.out
 echo "Perms on this directory are `ls -la .`" >> /tmp/diagnostics.out
+
+ls -la ~/.ssh
+if [[ "$?" != "0" ]]; then
+
+  echo "~/.ssh does not exist. We are right in making this folder" >> /tmp/diagnostics.out
+else
+  echo "~/.ssh already exists. We should not be re-making this folder" >> /tmp/diagnostics.out
+fi
+
 sudo mkdir -p ~/.ssh
 echo "status of making home dir was was $?" >> /tmp/diagnostics.out
+sudo chown $(whomai) ~/.ssh
+sudo chmod 700 ~/.ssh
 
+
+cd ~
 cp /etc/resolv.conf /tmp/old_resolv.conf
 sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 5s
+cat /etc/resolv.conf >> /tmp/diagnostics.out
 
 wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
@@ -95,11 +109,13 @@ if [[ "statusCode?" != 0 ]]; then
   # let's diagnose if it's a resolution issue
   host github.mtv.cloudera.com
   if [[ "$?" != "0" ]]; then
-    echo "We could not resolve the host"
+    echo "We could not resolve the host"  >> /tmp/diagnostics.out
   else
-    echo "Host resolution was fine, actually"
+    echo "Host resolution was fine, actually"  >> /tmp/diagnostics.out
   fi
-
+  
+  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+  
 fi
 
 chmod 600 ./id_rsa
