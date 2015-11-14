@@ -92,8 +92,6 @@ echo "status of making home dir was was $?" >> /tmp/diagnostics.out
 sudo chown $(whomai) ~/.ssh
 sudo chmod 700 ~/.ssh
 
-
-cd ~
 cp /etc/resolv.conf /tmp/old_resolv.conf
 sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 10s
