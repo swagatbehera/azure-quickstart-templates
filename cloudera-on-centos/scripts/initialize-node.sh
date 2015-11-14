@@ -103,7 +103,7 @@ service network restart
 sleep 25s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
-if [[ "statusCode?" != 0 ]]; then
+if [[ "$statusCode" != "0" ]]; then
   echo "pulling down file failed with code $statusCode" >> /tmp/diagnostics.out
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> /tmp/diagnostics.out
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
