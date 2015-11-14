@@ -96,7 +96,7 @@ sudo chmod 700 ~/.ssh
 cd ~
 cp /etc/resolv.conf /tmp/old_resolv.conf
 sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
-sleep 5s
+sleep 25s
 cat /etc/resolv.conf >> /tmp/diagnostics.out
 
 # set the configuration to not reset /etc/resolv.conf when we restart networking
@@ -128,7 +128,7 @@ cp ./id_rsa ~/.ssh/
 cp /tmp/old_resolv.conf /etc/resolv.conf
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
-sleep 10s
+sleep 25s
 
 ## end of hack
 
