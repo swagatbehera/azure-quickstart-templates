@@ -96,13 +96,13 @@ sudo chmod 700 ~/.ssh
 cd ~
 cp /etc/resolv.conf /tmp/old_resolv.conf
 sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
-sleep 25s
+sleep 10s
 cat /etc/resolv.conf >> /tmp/diagnostics.out
 
 # set the configuration to not reset /etc/resolv.conf when we restart networking
 sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
-sleep 10s
+sleep 25s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "statusCode?" != 0 ]]; then
