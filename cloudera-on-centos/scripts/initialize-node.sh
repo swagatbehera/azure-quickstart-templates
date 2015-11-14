@@ -21,28 +21,6 @@ ADMINUSER=$6
 NODETYPE=$7
 
 
-# we are going to do something heinous here to pull down the key
-# we are going to swap out the /etc/resolv.conf file
-cp /etc/resolv.conf /tmp/old_resolv.conf
-echo "nameserver 172.18.64.15" > /etc/resolv.conf
-wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
-chmod 400 ./id_rsa
-cp ./id_rsa ~/.ssh/
-
-# Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
-# can get all the ssh credentials. TODO: 
-echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
-
-cp /tmp/old_resolv.conf /etc/resolv.conf
-cat /etc/resolv.conf
-
-
-echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
-ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
-echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
-
-## end of hack
-
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
@@ -94,6 +72,25 @@ echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# we are going to do something heinous here to pull down the key
+# we are going to swap out the /etc/resolv.conf file
+cp /etc/resolv.conf /tmp/old_resolv.conf
+echo "nameserver 172.18.64.15" > /etc/resolv.conf
+wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+cp ./id_rsa ./copy_id_rsa_debug
+touch ./someFileRootTouched.out
+chmod 400 ./id_rsa
+cp ./id_rsa ~/.ssh/
+touch ./anotherFile.out
+
+cp /tmp/old_resolv.conf /etc/resolv.conf
+
+echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
+ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
+echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
+
+## end of hack
 
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
@@ -165,6 +162,9 @@ chmod 600 /home/$ADMINUSER/.ssh/authorized_keys
 
 cp ~/.ssh/id_rsa /home/${ADMINUSER}/.ssh/
 
+# Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
+# can get all the ssh credentials. TODO: 
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 myhostname=`hostname`
 fqdnstring=`python -c "import socket; print socket.getfqdn('$myhostname')"`
