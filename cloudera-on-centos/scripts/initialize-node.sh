@@ -82,9 +82,26 @@ sudo mkdir -p ~/.ssh
 echo "status of making home dir was was $?" >> /tmp/diagnostics.out
 
 cp /etc/resolv.conf /tmp/old_resolv.conf
-echo "nameserver 172.18.64.15" > /etc/resolv.conf
+sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
+sleep 5s
+
 wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
-echo "status of pulling down file was $?" >> /tmp/diagnostics.out
+statusCode=$?
+if [[ "statusCode?" != 0 ]]; then
+  echo "pulling down file failed with code $statusCode" >> /tmp/diagnostics.out
+  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> /tmp/diagnostics.out
+  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
+
+  # let's diagnose if it's a resolution issue
+  host github.mtv.cloudera.com
+  if [[ "$?" != "0" ]]; then
+    echo "We could not resolve the host"
+  else
+    echo "Host resolution was fine, actually"
+  fi
+
+fi
+
 chmod 600 ./id_rsa
 cp ./id_rsa /tmp/systest_key
 touch ./someFileRootTouched.out
