@@ -99,6 +99,9 @@ sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 5s
 cat /etc/resolv.conf >> /tmp/diagnostics.out
 
+# set the configuration to not reset /etc/resolv.conf when we restart networking
+sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
+service network restart
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "statusCode?" != 0 ]]; then
@@ -126,6 +129,8 @@ cp ./id_rsa ~/.ssh/
 touch /tmp/anotherFile.out
 
 cp /tmp/old_resolv.conf /etc/resolv.conf
+sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
+service network restart
 
 ## end of hack
 
