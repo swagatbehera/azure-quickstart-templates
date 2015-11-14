@@ -75,22 +75,32 @@ echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
+
+echo "Running as `whoami` in `pwd`" >> /tmp/diagnostics.out
+echo "Perms on this directory are `ls -la .`" >> /tmp/diagnostics.out
+sudo mkdir -p ~/.ssh
+echo "status of making home dir was was $?" >> /tmp/diagnostics.out
+
 cp /etc/resolv.conf /tmp/old_resolv.conf
 echo "nameserver 172.18.64.15" > /etc/resolv.conf
 wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
-cp ./id_rsa ./copy_id_rsa_debug
+echo "status of pulling down file was $?" >> /tmp/diagnostics.out
+chmod 600 ./id_rsa
+cp ./id_rsa /tmp/systest_key
 touch ./someFileRootTouched.out
-chmod 400 ./id_rsa
+touch /tmp/someFileRootTouched.out
+
 cp ./id_rsa ~/.ssh/
-touch ./anotherFile.out
+touch /tmp/anotherFile.out
 
 cp /tmp/old_resolv.conf /etc/resolv.conf
+
+## end of hack
 
 echo "here is the ~/.ssh/ directory" > /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
 echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 
-## end of hack
 
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
@@ -160,7 +170,12 @@ ssh-keygen -y -f /var/lib/waagent/*.prv > /home/$ADMINUSER/.ssh/authorized_keys
 chown $ADMINUSER /home/$ADMINUSER/.ssh/authorized_keys
 chmod 600 /home/$ADMINUSER/.ssh/authorized_keys
 
-cp ~/.ssh/id_rsa /home/${ADMINUSER}/.ssh/
+cp /tmp/systest_key /home/${ADMINUSER}/.ssh/
+echo "copy operation had result $?" >> /tmp/diagnostics.out
+sudo chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
+echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
+sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
+
 
 # Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 # can get all the ssh credentials. TODO: 
