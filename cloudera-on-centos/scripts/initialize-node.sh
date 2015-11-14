@@ -139,20 +139,25 @@ echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
 then
+  echo "preparing master node" >> /tmp/ssh_diagnosis.out
   bash ./prepare-masternode-disks.sh
+  echo "preparing master node exited with code $?" >> /tmp/ssh_diagnosis.out
+  
 elif [ "$NODETYPE" == "datanode" ]
 then
+  echo "preparing data node" >> /tmp/ssh_diagnosis.out
   bash ./prepare-datanode-disks.sh
+  echo "preparing data node exited with code $?" >> /tmp/ssh_diagnosis.out
 else
   echo "#unknown type, default to datanode"
   bash ./prepare-datanode-disks.sh
 fi
 
-echo "Done preparing disks.  Now ls -la looks like this:"
-ls -la /
+echo "Done preparing disks.  Now ls -la looks like this:" >> /tmp/ssh_diagnosis.out
+ls -la / >> /tmp/ssh_diagnosis.out
 # Create Impala scratch directory
 numDataDirs=$(ls -la / | grep data | wc -l)
-echo "numDataDirs:" $numDataDirs
+echo "numDataDirs:" $numDataDirs >> /tmp/ssh_diagnosis.out
 let endLoopIter=(numDataDirs - 1)
 for x in $(seq 0 $endLoopIter)
 do 
@@ -196,23 +201,21 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
 #use the key from the key vault as the SSH authorized key
-mkdir /home/$ADMINUSER/.ssh
-chown $ADMINUSER /home/$ADMINUSER/.ssh
-chmod 700 /home/$ADMINUSER/.ssh
+mkdir /home/${ADMINUSER}/.ssh
+chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
+chmod 700 /home/${ADMINUSER}/.ssh
 
-ssh-keygen -y -f /var/lib/waagent/*.prv > /home/$ADMINUSER/.ssh/authorized_keys
-chown $ADMINUSER /home/$ADMINUSER/.ssh/authorized_keys
-chmod 600 /home/$ADMINUSER/.ssh/authorized_keys
+ssh-keygen -y -f /var/lib/waagent/*.prv > /home/${ADMINUSER}/.ssh/authorized_keys
+chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
+chmod 600 /home/${ADMINUSER}/.ssh/authorized_keys
 
-cp /tmp/systest_key /home/${ADMINUSER}/.ssh/
+cp /tmp/systest_key /home/${ADMINUSER}/.ssh/id_rsa
 echo "copy operation had result $?" >> /tmp/diagnostics.out
-sudo chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
+chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
 echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
 sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
 
-
 # Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
-# can get all the ssh credentials. TODO: 
 echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 myhostname=`hostname`
