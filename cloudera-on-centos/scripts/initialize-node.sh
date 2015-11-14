@@ -99,12 +99,12 @@ sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 5s
 cat /etc/resolv.conf >> /tmp/diagnostics.out
 
-wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "statusCode?" != 0 ]]; then
   echo "pulling down file failed with code $statusCode" >> /tmp/diagnostics.out
-  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> /tmp/diagnostics.out
-  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
+  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> /tmp/diagnostics.out
+  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
 
   # let's diagnose if it's a resolution issue
   host github.mtv.cloudera.com
@@ -114,8 +114,7 @@ if [[ "statusCode?" != 0 ]]; then
     echo "Host resolution was fine, actually"  >> /tmp/diagnostics.out
   fi
   
-  wget http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
-  
+  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 fi
 
 chmod 600 ./id_rsa
