@@ -69,11 +69,11 @@ NODES=()
 let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
-  x=${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}
+  x=${NAMEPREFIX}-mn$i.${NAME_SUFFIX}
   echo "x is: $x" >> /tmp/masternodes
   privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "$x : ${privateIp}" >> /tmp/privateMasterIps
-  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn${i}.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn${i} " >> /tmp/initlog.out"
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAME_SUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
 
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
 done
@@ -83,12 +83,12 @@ echo "finished nn private ip discovery >> /tmp/bc_initlog.out"
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  x=${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}
+  x=${NAMEPREFIX}-dn$i.${NAME_SUFFIX}
   echo "x is: $x" >> /tmp/datanodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
-  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " >> /tmp/initlog.out"
-  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
+  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
 done
 
 echo "finished dn private ip discovery >> /tmp/bc_initlog.out"
