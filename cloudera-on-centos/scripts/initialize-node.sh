@@ -123,11 +123,7 @@ fi
 
 chmod 600 ./id_rsa
 cp ./id_rsa /tmp/systest_key
-touch ./someFileRootTouched.out
-touch /tmp/someFileRootTouched.out
-
 cp ./id_rsa ~/.ssh/
-touch /tmp/anotherFile.out
 
 cp /tmp/old_resolv.conf /etc/resolv.conf
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
@@ -139,7 +135,6 @@ sleep 10s
 echo "here is the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
 echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
-
 
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
