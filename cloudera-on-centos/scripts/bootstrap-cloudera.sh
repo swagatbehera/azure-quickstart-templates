@@ -43,6 +43,53 @@ log() {
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 
+
+echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
+
+#Generate IP Addresses for the cloudera setup
+NODES=()
+
+let "NAMEEND=MASTERNODES-1" || true
+for i in $(seq 0 $NAMEEND)
+do
+  x=${NAMEPREFIX}-mn$i.${NAME_SUFFIX}
+  echo "x is: $x" >> /tmp/masternodes
+  privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo "$x : ${privateIp}" >> /tmp/privateMasterIps
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAME_SUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
+
+  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
+done
+
+echo "finished nn private ip discovery" >> /tmp/bc_initlog.out
+
+let "DATAEND=DATANODES-1" || true
+for i in $(seq 0 $DATAEND)
+do
+  x=${NAMEPREFIX}-dn$i.${NAME_SUFFIX}
+  echo "x is: $x" >> /tmp/datanodes
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo $privateIp >> /tmp/privateDataIps
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
+  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
+done
+
+echo "finished dn private ip discovery" >> /tmp/bc_initlog.out
+
+OIFS=$IFS
+IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
+
+IFS=','
+for x in $NODE_IPS
+do
+  echo "x as member of NODE_IPS is: $x" >> /tmp/initlog.out
+  line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
+  echo "$line as member of NODE_IPS is: $x" >> /tmp/initlog.out
+  echo "$line" >> /etc/hosts
+done
+IFS=${OIFS}
+
+
 ### Assume /etc/hosts is correct and set
 # Get management node
 mip=$(while read p; do echo $p | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
@@ -61,50 +108,6 @@ done < /etc/hosts
 log "mip: $mip"
 log "wip: $wip_string"
 
-log "NAMESUFFIX is: $NAMESUFFIX"
-
-#Generate IP Addresses for the cloudera setup
-NODES=()
-
-let "NAMEEND=MASTERNODES-1" || true
-for i in $(seq 0 $NAMEEND)
-do
-  x=${NAMEPREFIX}-mn$i.${NAME_SUFFIX}
-  echo "x is: $x" >> /tmp/masternodes
-  privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo "$x : ${privateIp}" >> /tmp/privateMasterIps
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAME_SUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
-
-  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
-done
-
-echo "finished nn private ip discovery >> /tmp/bc_initlog.out"
-
-let "DATAEND=DATANODES-1" || true
-for i in $(seq 0 $DATAEND)
-do
-  x=${NAMEPREFIX}-dn$i.${NAME_SUFFIX}
-  echo "x is: $x" >> /tmp/datanodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo $privateIp >> /tmp/privateDataIps
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
-  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
-done
-
-echo "finished dn private ip discovery >> /tmp/bc_initlog.out"
-
-OIFS=$IFS
-IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
-
-IFS=','
-for x in $NODE_IPS
-do
-  echo "x as member of NODE_IPS is: $x" >> /tmp/initlog.out
-  line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
-  echo "$line as member of NODE_IPS is: $x" >> /tmp/initlog.out
-  echo "$line" >> /etc/hosts
-done
-IFS=${OIFS}
 
 #use the key from the key vault as the SSH private key
 #openssl rsa -in /var/lib/waagent/*.prv -out /home/$ADMINUSER/.ssh/id_rsa
@@ -122,7 +125,7 @@ do
   host=$(echo $p | grep "azure" | grep -v local | cut -d' ' -f 1)
   echo "host: $host >> /tmp/settingResolvConf.out"
   
-  scp -o "StrictHostKeyChecking=false" /etc/hosts systest@${host}:/home/${ADMINUSER}/hosts
+  scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
   
   # set /etc/resolv.conf
