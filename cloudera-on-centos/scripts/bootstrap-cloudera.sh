@@ -132,18 +132,25 @@ do
   host=$(echo $p | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
   
   if [[ "${host}" = "" ]]; then
-    echo "host empty. continuing" >> /tmp/settingResolvConf.out
+    echo "host empty for line $p. continuing" >> /tmp/settingResolvConf.out
     continue
   fi
 
-  echo "host: ${host}" | tee -a /tmp/settingResolvConf.out
+  echo "host: ${host}" >> /tmp/settingResolvConf.out
   
   scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
+  echo "done scping to host: ${host}" | tee -a /tmp/settingResolvConf.out
+
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
-  
+ 
+  echo "done setting /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
+
   # set /etc/resolv.conf
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0;
- sudo service network restart;"
+sudo service network restart;"
+
+ echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
+
 done < /etc/hosts
 sleep 30s
 echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
