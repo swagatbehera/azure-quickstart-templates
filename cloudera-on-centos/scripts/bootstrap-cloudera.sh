@@ -66,7 +66,7 @@ echo "finished nn private ip discovery" >> /tmp/bc_initlog.out
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  x=${NAMEPREFIX}-dn$i.${NAME_SUFFIX}
+  x=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
   echo "x is: $x" >> /tmp/datanodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
