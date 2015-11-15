@@ -129,8 +129,9 @@ do
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
   
   # set /etc/resolv.conf
-  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee -a /etc/resolv.conf; hostname; cat /etc/resolv.conf"
+  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; hostname; cat /etc/resolv.conf; sudo service network restart;"
 done < /etc/hosts
+sleep 30s
 echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
 
 # This key should have been set by initialize-node.sh
