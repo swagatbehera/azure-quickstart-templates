@@ -54,7 +54,7 @@ for i in $(seq 0 $NAMEEND)
 do
   x=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "x is: $x" >> /tmp/masternodes
-  privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "$x : ${privateIp}" >> /tmp/privateMasterIps
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAMESUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
 
@@ -68,7 +68,7 @@ for i in $(seq 0 $DATAEND)
 do
   x=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
   echo "x is: $x" >> /tmp/datanodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAMESUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
   NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAMESUFFIX}:${NAMEPREFIX}-dn$i")
