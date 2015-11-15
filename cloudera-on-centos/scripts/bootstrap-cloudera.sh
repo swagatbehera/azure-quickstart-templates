@@ -120,16 +120,28 @@ log "wip: $wip_string"
 
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
 echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> /tmp/settingResolvConf.out
+
+sudo echo 'nameserver 172.18.64.15' > /etc/resolv.conf
+sudo service network restart
+sleep 25
+
 while read p; 
 do
-  host=$(echo $p | grep "azure" | grep -v local | cut -d' ' -f 1)
-  echo "host: $host >> /tmp/settingResolvConf.out"
+  
+  host=$(echo $p | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
+  
+  if [[ "${host}" = "" ]]; then
+    echo "host empty. continuing" >> /tmp/settingResolvConf.out
+    continue
+  fi
+
+  echo "host: ${host}" | tee -a /tmp/settingResolvConf.out
   
   scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
   
   # set /etc/resolv.conf
-  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; hostname; cat /etc/resolv.conf; sudo service network restart;"
+  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo service network restart;"
 done < /etc/hosts
 sleep 30s
 echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
