@@ -52,7 +52,7 @@ NODES=()
 let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
-  x=${NAMEPREFIX}-mn$i.${NAME_SUFFIX}
+  x=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "x is: $x" >> /tmp/masternodes
   privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "$x : ${privateIp}" >> /tmp/privateMasterIps
