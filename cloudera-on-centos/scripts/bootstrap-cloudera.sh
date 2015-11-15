@@ -120,7 +120,7 @@ log "wip: $wip_string"
 
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
 echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> /tmp/settingResolvConf.out
-sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
+sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 
 sudo echo 'nameserver 172.18.64.15' > /etc/resolv.conf
 sudo service network restart
@@ -139,14 +139,14 @@ do
   echo "host: ${host}" >> /tmp/settingResolvConf.out
   
   scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
-  echo "done scping to host: ${host}" | tee -a /tmp/settingResolvConf.out
+  echo "done scping to host: ${host}" >> /tmp/settingResolvConf.out
 
   ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
  
   echo "done setting /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
 
   # set /etc/resolv.conf
-  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0;
+  ssh -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0;
 sudo service network restart;"
 
  echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
