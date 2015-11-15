@@ -56,9 +56,9 @@ do
   echo "x is: $x" >> /tmp/masternodes
   privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "$x : ${privateIp}" >> /tmp/privateMasterIps
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAME_SUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAMESUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
 
-  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
+  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAMESUFFIX}:${NAMEPREFIX}-mn$i")
 done
 
 echo "finished nn private ip discovery" >> /tmp/bc_initlog.out
@@ -70,8 +70,8 @@ do
   echo "x is: $x" >> /tmp/datanodes
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
-  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${NAMESUFFIX}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
+  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${NAMESUFFIX}:${NAMEPREFIX}-dn$i")
 done
 
 echo "finished dn private ip discovery" >> /tmp/bc_initlog.out
