@@ -35,14 +35,12 @@ INSTALLCDH=${18}
 CLUSTERNAME=$NAMEPREFIX
 
 execname=$0
-
 log() {
   echo "$(date): [${execname}] $@" 
 }
 
 # Converts a domain like machine.domain.com to domain.com by removing the machine name
 NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
-
 
 echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
 
@@ -60,8 +58,6 @@ do
 
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAMESUFFIX}:${NAMEPREFIX}-mn$i")
 done
-
-echo "finished nn private ip discovery" >> /tmp/bc_initlog.out
 
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
@@ -89,7 +85,6 @@ do
 done
 IFS=${OIFS}
 
-
 ### Assume /etc/hosts is correct and set
 # Get management node
 mip=$(while read p; do echo $p | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
@@ -107,16 +102,6 @@ done < /etc/hosts
 
 log "mip: $mip"
 log "wip: $wip_string"
-
-
-#use the key from the key vault as the SSH private key
-#openssl rsa -in /var/lib/waagent/*.prv -out /home/$ADMINUSER/.ssh/id_rsa
-#chmod 600 /home/$ADMINUSER/.ssh/id_rsa
-#chown $ADMINUSER /home/$ADMINUSER/.ssh/id_rsa
-
-#file="/home/$ADMINUSER/.ssh/id_rsa"
-#key="/tmp/id_rsa.pem"
-#openssl rsa -in $file -outform PEM > $key
 
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
 echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> /tmp/settingResolvConf.out
@@ -142,13 +127,11 @@ do
   echo "done scping to host: ${host}" >> /tmp/settingResolvConf.out
 
   ssh -n -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
- 
   echo "done setting /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
 
   # set /etc/resolv.conf
   ssh -n -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
-
- echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
+  echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/settingResolvConf.out
 
 done < /etc/hosts
 sleep 30s
