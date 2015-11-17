@@ -58,7 +58,7 @@ do
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> /tmp/initlog.out
     sleep 25s
     privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-    echo "Second attempt at private ip for ${x} produced: ${privateIp}" >> /tmp/initlog.out"
+    echo "Second attempt at private ip for ${x} produced: ${privateIp}" >> /tmp/initlog.out
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAMESUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
 
