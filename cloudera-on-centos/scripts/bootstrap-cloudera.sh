@@ -65,8 +65,6 @@ do
     echo "Second attempt at private ip for ${x} produced: ${privateIp}" >> /tmp/initlog.out
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAMESUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
-
-  # Setting private hostnmae
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAMESUFFIX}:${NAMEPREFIX}-mn$i")
 done
 
