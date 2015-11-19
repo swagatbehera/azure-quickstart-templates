@@ -149,9 +149,9 @@ echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.ou
 while read p; 
 do
 
-  ip=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 0)
-  fqdn=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
-  shortname=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
+  ip=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
+  fqdn=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
+  shortname=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 3)
   
   if [[ "${fqdn}" = "" ]]; then
     echo "host empty for line $p. continuing" >> /tmp/settingPrivateHostnames.out
@@ -160,7 +160,7 @@ do
 
   echo "fqdn: ${fqdn}" >> /tmp/settingPrivateHostnames.out
   echo "About to associate ${shortname}.${domain} to ip ${ip} on domain ${domain}."
-  #ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${domain} ${ip} ${domain}"
+  ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${domain} ${ip} ${domain}"
  
 done < /etc/hosts
 
