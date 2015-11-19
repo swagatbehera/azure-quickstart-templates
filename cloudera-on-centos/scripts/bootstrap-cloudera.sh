@@ -44,6 +44,10 @@ NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 
 echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
 
+# Add this host's private ip and private hostname to the dns
+CLOUDERA_DNS_IP="10.17.181.104"
+domain="azure.cloudera.com"
+
 #Generate IP Addresses for the cloudera setup
 NODES=()
 
@@ -62,6 +66,7 @@ do
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${NAMESUFFIX}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
 
+  # Setting private hostnmae
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${NAMESUFFIX}:${NAMEPREFIX}-mn$i")
 done
 
@@ -142,6 +147,24 @@ do
 done < /etc/hosts
 sleep 30s
 echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
+
+while read p; 
+do
+
+  ip=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 0)
+  fqdn=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
+  shortname=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
+  
+  if [[ "${fqdn}" = "" ]]; then
+    echo "host empty for line $p. continuing" >> /tmp/settingPrivateHostnames.out
+    continue
+  fi
+
+  echo "fqdn: ${fqdn}" >> /tmp/settingPrivateHostnames.out
+  echo "About to associate ${shortname}.${domain} to ip ${ip} on domain ${domain}."
+  #ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${domain} ${ip} ${domain}"
+ 
+done < /etc/hosts
 
 # This key should have been set by initialize-node.sh
 key="/home/${ADMINUSER}/.ssh/id_rsa"
