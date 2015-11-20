@@ -23,8 +23,8 @@ NODETYPE=$7
 
 # Set the hostname
 hostname=$(hostname)
-instanceName=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
-subDomain="azure.cloudera.com"
+instancename=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
+subdomain="azure.cloudera.com"
 
 # install lsb_release    
 if [ ! -f /usr/bin/lsb_release ]; then
@@ -55,33 +55,10 @@ elif [ -f /etc/init.d/boot.local ]; then
   BOOT_FILE=/etc/init.d/boot.local
 fi
     
-local instanceHostname="${instanceName}.${subDomain}"
-
-if [ "${distro}" == 'CentOS' -o "${distro}" == 'RedHatEnterpriseServer' -o "${distro}" == 'EnterpriseEnterpriseServer' \
-    -o "${distro}" == 'AmazonAMI' -o "${distro}" == 'OracleServer' ]; then
-  sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
-	hostname ${instanceName}.${subDomain};
-  if [[ "${rel}" == "7."* ]]; then
-    sed -i '/system_info:/a\ \ preserve_hostname: true' /etc/cloud/cloud.cfg;
-    sed -i '/set_hostname/d' /etc/cloud/cloud.cfg;
-    sed -i '/update_hostname/d' /etc/cloud/cloud.cfg;
-    echo ${instanceHostname} > /etc/hostname;
-  fi
-elif [ "${distro}" == "SLES LINUX" ]; then
-  echo ${instanceHostname} > /etc/HOSTNAME;
-  hostname ${instanceHostname};
-elif [ "${distro}" == 'Ubuntu' -a "${rel}" == '10.04' ]; then
-  echo ${instanceHostname} > /etc/hostname;
-	hostname ${instanceHostname};
-elif [ "${distro}" == "Debian" ] || [ "${distro}" == "Ubuntu" -a "${rel}" != "10.04" ]; then
-  # While we're at it, install the latest liblickfile
-  apt-get -y install liblockfile-bin liblockfile1
-  echo ${instanceHostname} > /etc/hostname;
-  hostname ${instanceHostname};
-else
-  echo "Not a known distro/release";
-fi
-
+instanceHostname="${instancename}.${subdomain}"
+echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
+sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
+hostname ${instancename}.${sudomain};
 hostname >> /tmp/getHostName.out
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
