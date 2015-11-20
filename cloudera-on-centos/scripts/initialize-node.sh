@@ -60,6 +60,11 @@ echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
 sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
 hostname ${instancename}.${subdomain};
 hostname >> /tmp/getHostName.out
+
+sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
+service network restart
+sleep 25s
+
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
