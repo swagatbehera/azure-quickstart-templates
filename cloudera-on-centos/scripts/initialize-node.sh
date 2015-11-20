@@ -81,7 +81,7 @@ cp /tmp/old_resolv.conf /etc/resolv.conf
 # Set the hostname
 hostname=$(hostname)
 instancename=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
-subdomain="azure.cloudera.com"
+subdomain="${NAMESUFFIX}"
 
 instanceHostname="${instancename}.${subdomain}"
 echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
