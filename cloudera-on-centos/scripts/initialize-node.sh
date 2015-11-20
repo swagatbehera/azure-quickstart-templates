@@ -21,97 +21,6 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
-# Set the hostname
-hostname=$(hostname)
-instancename=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
-subdomain="azure.cloudera.com"
-
-# install lsb_release    
-if [ ! -f /usr/bin/lsb_release ]; then
-  if [ -f /usr/bin/apt-get ]; then
-    apt-get -y install lsb-release
-  elif [ -f /usr/bin/zypper ]; then
-    zypper install -y lsb-release
-  elif [ -f /usr/bin/yum ]; then
-    yum -y install redhat-lsb-core
-  fi
-fi
-    
-local ipAddress=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
-local distro=`lsb_release -i -s`
-local rel=`lsb_release -r -s`
-
-if [ -f /etc/SuSE-brand ]; then
-  distro="SLES LINUX"
-elif [ -f /etc/SuSE-release ]; then
-  distro="SLES LINUX"
-fi
-
-if [ -f /etc/rc.d/rc.local ]; then
-  BOOT_FILE=/etc/rc.d/rc.local
-elif [ -f /etc/rc.local ]; then
-  BOOT_FILE=/etc/rc.local
-elif [ -f /etc/init.d/boot.local ]; then
-  BOOT_FILE=/etc/init.d/boot.local
-fi
-    
-instanceHostname="${instancename}.${subdomain}"
-echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
-sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
-hostname ${instancename}.${subdomain};
-hostname >> /tmp/getHostName.out
-
-sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
-service network restart
-sleep 25s
-
-#ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
-#echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
-
-##Generate IP Addresses for the cloudera setup
-#NODES=()
-
-#let "NAMEEND=MASTERNODES-1" || true
-#for i in $(seq 0 $NAMEEND)
-#do
-#  x=${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}
-#  echo "x is: $x" >> /tmp/masternodes
-#  privateIp=$(ssh -i ./id_rsa -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-#  echo "$x : ${privateIp}" >> /tmp/privateMasterIps
-#  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-mn${i}.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn${i} " >> /tmp/initlog.out"
-
-#  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-mn$i")
-#done
-
-#echo "finished nn private ip discovery >> /tmp/initlog.out"
-
-#let "DATAEND=DATANODES-1" || true
-#for i in $(seq 0 $DATAEND)
-#do
-#  x=${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}
-#  echo "x is: $x" >> /tmp/datanodes
-#  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-#  echo $privateIp >> /tmp/privateDataIps
-#  echo "Adding to nodes: "${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i " >> /tmp/initlog.out"
-#  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${ADJUSTED_NAME_SUFFIX}:${NAMEPREFIX}-dn$i")
-#done
-
-#echo "finished dn private ip discovery >> /tmp/initlog.out"
-
-## Converts a domain like machine.domain.com to domain.com by removing the machine name
-#NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
-
-#OIFS=$IFS
-#IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
-
-#IFS=','
-#for x in $NODE_IPS
-#do
-#  echo "x as member of NODE_IPS is: $x" >> /tmp/initlog.out
-#  line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
-#  echo "$line" >> /etc/hosts
-#done
-#IFS=${OIFS}
 
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
@@ -168,6 +77,18 @@ cp ./id_rsa /tmp/systest_key
 cp ./id_rsa ~/.ssh/
 
 cp /tmp/old_resolv.conf /etc/resolv.conf
+
+# Set the hostname
+hostname=$(hostname)
+instancename=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
+subdomain="azure.cloudera.com"
+
+instanceHostname="${instancename}.${subdomain}"
+echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
+sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
+hostname ${instancename}.${subdomain};
+hostname >> /tmp/getHostName.out
+
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
 sleep 25s
