@@ -20,6 +20,65 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
+# Set the hostname
+ instanceName=$(hostname) ## TODO: Fix this
+ subDomain="azure.cloudera.com"
+
+# install lsb_release    
+if [ ! -f /usr/bin/lsb_release ]; then
+  if [ -f /usr/bin/apt-get ]; then
+    apt-get -y install lsb-release
+  elif [ -f /usr/bin/zypper ]; then
+    zypper install -y lsb-release
+  elif [ -f /usr/bin/yum ]; then
+    yum -y install redhat-lsb-core
+  fi
+fi
+    
+local ipAddress=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
+local distro=`lsb_release -i -s`
+local rel=`lsb_release -r -s`
+
+if [ -f /etc/SuSE-brand ]; then
+  distro="SLES LINUX"
+elif [ -f /etc/SuSE-release ]; then
+  distro="SLES LINUX"
+fi
+
+if [ -f /etc/rc.d/rc.local ]; then
+  BOOT_FILE=/etc/rc.d/rc.local
+elif [ -f /etc/rc.local ]; then
+  BOOT_FILE=/etc/rc.local
+elif [ -f /etc/init.d/boot.local ]; then
+  BOOT_FILE=/etc/init.d/boot.local
+fi
+    
+local instanceHostname="${instanceName}.${subDomain}"
+
+if [ "${distro}" == 'CentOS' -o "${distro}" == 'RedHatEnterpriseServer' -o "${distro}" == 'EnterpriseEnterpriseServer' \
+    -o "${distro}" == 'AmazonAMI' -o "${distro}" == 'OracleServer' ]; then
+  sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
+	hostname ${instanceName}.${subDomain};
+  if [[ "${rel}" == "7."* ]]; then
+    sed -i '/system_info:/a\ \ preserve_hostname: true' /etc/cloud/cloud.cfg;
+    sed -i '/set_hostname/d' /etc/cloud/cloud.cfg;
+    sed -i '/update_hostname/d' /etc/cloud/cloud.cfg;
+    echo ${instanceHostname} > /etc/hostname;
+  fi
+elif [ "${distro}" == "SLES LINUX" ]; then
+  echo ${instanceHostname} > /etc/HOSTNAME;
+  hostname ${instanceHostname};
+elif [ "${distro}" == 'Ubuntu' -a "${rel}" == '10.04' ]; then
+  echo ${instanceHostname} > /etc/hostname;
+	hostname ${instanceHostname};
+elif [ "${distro}" == "Debian" ] || [ "${distro}" == "Ubuntu" -a "${rel}" != "10.04" ]; then
+  # While we're at it, install the latest liblickfile
+  apt-get -y install liblockfile-bin liblockfile1
+  echo ${instanceHostname} > /etc/hostname;
+  hostname ${instanceHostname};
+else
+  echo "Not a known distro/release";
+fi
 
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
