@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#TODO: Remove unused arguments and re-architect calling script to not supply them
 echo "initializing nodes..."
 IPPREFIX=$1
 NAMEPREFIX=$2
@@ -21,8 +22,9 @@ ADMINUSER=$6
 NODETYPE=$7
 
 # Set the hostname
- instanceName=$(hostname) ## TODO: Fix this
- subDomain="azure.cloudera.com"
+hostname=$(hostname)
+instanceName=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
+subDomain="azure.cloudera.com"
 
 # install lsb_release    
 if [ ! -f /usr/bin/lsb_release ]; then
@@ -80,6 +82,7 @@ else
   echo "Not a known distro/release";
 fi
 
+hostname >> /tmp/getHostName.out
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
 
