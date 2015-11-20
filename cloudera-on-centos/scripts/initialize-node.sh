@@ -58,7 +58,7 @@ fi
 instanceHostname="${instancename}.${subdomain}"
 echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
 sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
-hostname ${instancename}.${sudomain};
+hostname ${instancename}.${subdomain};
 hostname >> /tmp/getHostName.out
 #ADJUSTED_NAME_SUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 #echo "ADJUSTED_NAME_SUFFIX is ${ADJUSTED_NAME_SUFFIX}" >> /tmp/initlog.out
