@@ -39,6 +39,8 @@ NAMESUFFIX=$(echo $NAMESUFFIX | sed "s/^[^.]*\.//")
 CLOUDERA_DNS_IP="10.17.181.104"
 CLOUDERA_DOMAIN="azure.cloudera.com"
 
+BOOTSTRAP_LOG = "/tmp/bootstrap.out"
+
 execname=$0
 log() {
   echo "$(date): [${execname}] $@" 
@@ -50,12 +52,12 @@ addPrivateIpToNodes() {
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateMasterIps
   if [[ "${privateIp}" = "" ]]; then
-    echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> /tmp/bootstrap_log.out
+    echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
     sleep 25s
     privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-    echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> /tmp/bootstrap_log.out
+    echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> ${BOOTSTRAP_LOG}
   fi
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn${i} \" >> /tmp/bootstrap_log.out"
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn${i} \" >> ${BOOTSTRAP_LOG}"
   NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn$i")
 }
 
@@ -86,9 +88,9 @@ IFS=',';NODE_IPS="${NODES[*]}";IFS=$' \t\n'
 IFS=','
 for x in $NODE_IPS
 do
-  echo "x as member of NODE_IPS is: $x" >> /tmp/bootstrap_log.out
+  echo "x as member of NODE_IPS is: $x" >> ${BOOTSTRAP_LOG}
   line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
-  echo "${line} as member of NODE_IPS is: $x" >> /tmp/bootstrap_log.out
+  echo "${line} as member of NODE_IPS is: $x" >> ${BOOTSTRAP_LOG}
   echo "${line}" >> /etc/hosts
 done
 IFS=${OIFS}
@@ -107,7 +109,7 @@ while read p; do
 done < /etc/hosts
 
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
-echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> /tmp/bootstrap_log.out
+echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> ${BOOTSTRAP_LOG}
 sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 
 # First do it on the local machine
@@ -118,29 +120,27 @@ sleep 25
 # Then set resolv.conf on the others
 while read p; 
 do
-  
   host=$(echo "${p}" | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
   
   if [[ "${host}" = "" ]]; then
-    echo "host empty for line $p. continuing" >> /tmp/bootstrap_log.out
+    echo "host empty for line $p. continuing" >> ${BOOTSTRAP_LOG}
     continue
   fi
 
-  echo "host: ${host}" >> /tmp/bootstrap_log.out
-  
-  scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
-  echo "done scping to host: ${host}" >> /tmp/bootstrap_log.out
+  echo "host: ${host}" >> ${BOOTSTRAP_LOG}
+  scp -o "StrictHostKeyChecking=false" /etc/hosts "${ADMINUSER}@${host}":"/home/${ADMINUSER}/hosts"
+  echo "done scping to host: ${host}" >> ${BOOTSTRAP_LOG}
 
   ssh -n -o "StrictHostKeyChecking=false" systest@"${host}" -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
-  echo "done setting /etc/hosts on host: ${host}" >> /tmp/bootstrap_log.out
+  echo "done setting /etc/hosts on host: ${host}" >> ${BOOTSTRAP_LOG}
 
   # set /etc/resolv.conf
   ssh -n -o "StrictHostKeyChecking=false" systest@"${host}" -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
-  echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/bootstrap_log.out
+  echo "done with long command on /etc/hosts on host: ${host}" >> ${BOOTSTRAP_LOG}
 
 done < /etc/hosts
 sleep 30s
-echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/bootstrap_log.out
+echo "Done adjusting /etc/resolv.conf on all hosts" >> ${BOOTSTRAP_LOG}
 
 while read p; 
 do
