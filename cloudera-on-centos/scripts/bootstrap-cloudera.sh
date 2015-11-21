@@ -33,7 +33,7 @@ COMPANY=${17}
 INSTALLCDH=${18}
 
 CLUSTERNAME=${NAMEPREFIX}
-NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
+NAMESUFFIX=$(echo $NAMESUFFIX | sed "s/^[^.]*\.//")
 
 # Necessary for adding these hosts to Cloudera's internal DNS
 CLOUDERA_DNS_IP="10.17.181.104"
@@ -46,7 +46,7 @@ log() {
 
 addPrivateIpToNodes() {
   
-  ${publicHostname}=${1}
+  publicHostname=${1}
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateMasterIps
   if [[ "${privateIp}" = "" ]]; then
