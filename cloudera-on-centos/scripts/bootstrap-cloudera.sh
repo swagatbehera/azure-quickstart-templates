@@ -39,6 +39,7 @@ log() {
   echo "$(date): [${execname}] $@" 
 }
 
+NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
 echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
 
 # Add this host's private ip and private hostname to the dns
