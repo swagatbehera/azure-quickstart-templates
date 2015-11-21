@@ -39,9 +39,6 @@ log() {
   echo "$(date): [${execname}] $@" 
 }
 
-# Converts a domain like machine.domain.com to domain.com by removing the machine name
-NAMESUFFIX=`echo $NAMESUFFIX | sed 's/^[^.]*\.//'`
-
 echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
 
 # Add this host's private ip and private hostname to the dns
@@ -159,7 +156,7 @@ do
   fi
 
   echo "fqdn: ${fqdn}" >> /tmp/settingPrivateHostnames.out
-  echo "About to associate ${shortname}.${domain} to ip ${ip} on domain ${domain}."
+  echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${domain}."
   ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${domain} ${ip} ${domain}"
  
 done < /etc/hosts
