@@ -49,16 +49,24 @@ log() {
 addPrivateIpToNodes() {
   
   publicHostname=${1}
+  isMasterNode=${2}
+  
+  if [[ "${2}" = "true" ]]; then
+    ext="mn"
+  else
+    ext="dn"
+  fi
+  
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo "${publicHostname} : ${privateIp}" >> /tmp/privateMasterIps
+  echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
     sleep 25s
     privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
     echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> ${BOOTSTRAP_LOG}
   fi
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn${i} \" >> ${BOOTSTRAP_LOG}"
-  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn$i")
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-${ext}${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-${ext}${i} \" >> ${BOOTSTRAP_LOG}"
+  NODES+=("${privateIp}:${NAMEPREFIX}-${ext}$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-${ext}$i")
 }
 
 #Generate IP Addresses for the cloudera setup
@@ -70,7 +78,7 @@ for i in $(seq 0 $NAMEEND)
 do
   publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
-  addPrivateIpToNodes "${publicHostname}"
+  addPrivateIpToNodes "${publicHostname}" true
 done
 
 let "DATAEND=DATANODES-1" || true
@@ -78,7 +86,7 @@ for i in $(seq 0 $DATAEND)
 do
   publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
-  addPrivateIpToNodes "${publicHostname}"
+  addPrivateIpToNodes "${publicHostname}" false
 done
 
 # Take the value from NODES and put it into /etc/hosts
