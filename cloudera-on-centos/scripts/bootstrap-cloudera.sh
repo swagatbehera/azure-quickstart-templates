@@ -76,7 +76,7 @@ done
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
+  publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
   addPrivateIpToNodes "${publicHostname}"
 done
