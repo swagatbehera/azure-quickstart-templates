@@ -95,19 +95,6 @@ do
 done
 IFS=${OIFS}
 
-### Assume /etc/hosts is correct and set
-# Get management node
-mip=$(while read p; do echo "${p}" | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
-
-# Get non-CM nodes
-wip_string=''
-while read p; do
-  if [[ "$wip_string" != "" ]]; then
-    wip_string+=','
-  fi
-  wip_string+=$(echo "${p}" | grep "azure" | grep -v local | grep -v "\-mn0" | cut -d' ' -f 1 );
-done < /etc/hosts
-
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
 echo "About to adjust /etc/resolv.conf on all hosts, including this one" >> ${BOOTSTRAP_LOG}
 sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
@@ -158,11 +145,25 @@ do
   ssh -n -o "StrictHostKeyChecking=no" systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
 done < /etc/hosts
 
-# This key should have been set by initialize-node.sh
-key="/home/${ADMINUSER}/.ssh/id_rsa"
 if [ "${INSTALLCDH}" == "True" ]
 then
+
+  # This key should have been set by initialize-node.sh
+  key="/home/${ADMINUSER}/.ssh/id_rsa"
+
+  ### Assume /etc/hosts is correct and set
+  # Get management node
+  mip=$(while read p; do echo "${p}" | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
+
+  # Get non-CM nodes
+  wip_string=''
+  while read p; do
+    if [[ "$wip_string" != "" ]]; then
+      wip_string+=','
+    fi
+    wip_string+=$(echo "${p}" | grep "azure" | grep -v local | grep -v "\-mn0" | cut -d' ' -f 1 );
+  done < /etc/hosts
+
   sh initialize-cloudera-server.sh "${CLUSTERNAME}" "${key}" "${mip}" "${wip_string}" "${HA}" "${ADMINUSER}" "${PASSWORD}" "${CMUSER}" "${CMPASSWORD}" "${EMAILADDRESS}" "${BUSINESSPHONE}" "${FIRSTNAME}" "${LASTNAME}" "${JOBROLE}" "${JOBFUNCTION}" "${COMPANY}" >/dev/null 2>&1
 fi
 log "END: Detached script to finalize initialization running. PID: $!"
-
