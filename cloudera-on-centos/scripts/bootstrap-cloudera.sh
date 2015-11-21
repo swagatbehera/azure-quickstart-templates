@@ -44,37 +44,38 @@ echo "NAMESUFFIX is: ${NAMESUFFIX}" >> /tmp/bc_initlog.out
 
 # Add this host's private ip and private hostname to the dns
 CLOUDERA_DNS_IP="10.17.181.104"
-domain="azure.cloudera.com"
+CLOUDERA_DOMAIN="azure.cloudera.com"
 
 #Generate IP Addresses for the cloudera setup
 NODES=()
 
+# Go to each node, get the private ip, and save it locally
 let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
-  x=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
-  echo "x is: $x" >> /tmp/masternodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo "$x : ${privateIp}" >> /tmp/privateMasterIps
+  publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
+  echo "publicHostname is: ${publicHostname}" >> /tmp/masternodes
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo "${publicHostname} : ${privateIp}" >> /tmp/privateMasterIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> /tmp/initlog.out
     sleep 25s
-    privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${x} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-    echo "Second attempt at private ip for ${x} produced: ${privateIp}" >> /tmp/initlog.out
+    privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+    echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> /tmp/initlog.out
   fi
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${domain}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
-  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${domain}:${NAMEPREFIX}-mn$i")
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn${i} \" >> /tmp/initlog.out"
+  NODES+=("${privateIp}:${NAMEPREFIX}-mn$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn$i")
 done
 
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  x=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
-  echo "x is: $x" >> /tmp/datanodes
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@$x -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
+  echo "publicHostname is: ${publicHostname}" >> /tmp/datanodes
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo $privateIp >> /tmp/privateDataIps
-  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${domain}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
-  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${domain}:${NAMEPREFIX}-dn$i")
+  echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-dn$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-dn$i \" >> /tmp/initlog.out"
+  NODES+=("${privateIp}:${NAMEPREFIX}-dn$i.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-dn$i")
 done
 
 echo "finished dn private ip discovery" >> /tmp/bc_initlog.out
@@ -157,8 +158,8 @@ do
   fi
 
   echo "fqdn: ${fqdn}" >> /tmp/settingPrivateHostnames.out
-  echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${domain}."
-  ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${domain} ${ip} ${domain}"
+  echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${CLOUDERA_DOMAIN}."
+  ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
  
 done < /etc/hosts
 
