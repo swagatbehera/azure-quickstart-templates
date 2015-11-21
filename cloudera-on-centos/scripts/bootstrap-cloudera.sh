@@ -68,7 +68,7 @@ for i in $(seq 0 $NAMEEND)
 do
   publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
-  addPrivateIpToNodes ${publicHostname}
+  addPrivateIpToNodes "${publicHostname}"
 done
 
 let "DATAEND=DATANODES-1" || true
@@ -95,7 +95,7 @@ IFS=${OIFS}
 
 ### Assume /etc/hosts is correct and set
 # Get management node
-mip=$(while read p; do echo $p | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
+mip=$(while read p; do echo "${p}" | grep "azure" | grep -v local | grep "\-mn0" | cut -d' ' -f 1 ; done < /etc/hosts)
 
 # Get non-CM nodes
 wip_string=''
@@ -103,7 +103,7 @@ while read p; do
   if [[ "$wip_string" != "" ]]; then
     wip_string+=','
   fi
-  wip_string+=$(echo $p | grep "azure" | grep -v local | grep -v "\-mn0" | cut -d' ' -f 1 );
+  wip_string+=$(echo "${p}" | grep "azure" | grep -v local | grep -v "\-mn0" | cut -d' ' -f 1 );
 done < /etc/hosts
 
 # As a final act, we're going to go to each node in /etc/hosts and adjust /etc/hosts and the /etc/resolv.conf
@@ -119,7 +119,7 @@ sleep 25
 while read p; 
 do
   
-  host=$(echo $p | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
+  host=$(echo "${p}" | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
   
   if [[ "${host}" = "" ]]; then
     echo "host empty for line $p. continuing" >> /tmp/bootstrap_log.out
