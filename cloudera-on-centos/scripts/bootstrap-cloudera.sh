@@ -76,7 +76,7 @@ for i in $(seq 0 $DATAEND)
 do
   publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
-  addPrivateIpToNodes ${publicHostname}
+  addPrivateIpToNodes "${publicHostname}"
 done
 
 # Take the value from NODES and put it into /etc/hosts
@@ -88,8 +88,8 @@ for x in $NODE_IPS
 do
   echo "x as member of NODE_IPS is: $x" >> /tmp/bootstrap_log.out
   line=$(echo "$x" | sed 's/:/ /' | sed 's/:/ /')
-  echo "$line as member of NODE_IPS is: $x" >> /tmp/bootstrap_log.out
-  echo "$line" >> /etc/hosts
+  echo "${line} as member of NODE_IPS is: $x" >> /tmp/bootstrap_log.out
+  echo "${line}" >> /etc/hosts
 done
 IFS=${OIFS}
 
