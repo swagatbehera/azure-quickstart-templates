@@ -47,12 +47,12 @@ log() {
 addPrivateIpToNodes() {
   
   publicHostname=${1}
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateMasterIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> /tmp/bootstrap_log.out
     sleep 25s
-    privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@${publicHostname} -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+    privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
     echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> /tmp/bootstrap_log.out
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-mn${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-mn${i} \" >> /tmp/bootstrap_log.out"
@@ -131,23 +131,23 @@ do
   scp -o "StrictHostKeyChecking=false" /etc/hosts ${ADMINUSER}@${host}:/home/${ADMINUSER}/hosts
   echo "done scping to host: ${host}" >> /tmp/bootstrap_log.out
 
-  ssh -n -o "StrictHostKeyChecking=false" systest@${host} -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
+  ssh -n -o "StrictHostKeyChecking=false" systest@"${host}" -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
   echo "done setting /etc/hosts on host: ${host}" >> /tmp/bootstrap_log.out
 
   # set /etc/resolv.conf
-  ssh -n -o "StrictHostKeyChecking=false" systest@${host} -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
+  ssh -n -o "StrictHostKeyChecking=false" systest@"${host}" -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
   echo "done with long command on /etc/hosts on host: ${host}" >> /tmp/bootstrap_log.out
 
 done < /etc/hosts
 sleep 30s
-echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/settingResolvConf.out
+echo "Done adjusting /etc/resolv.conf on all hosts" >> /tmp/bootstrap_log.out
 
 while read p; 
 do
   # establish properties necessary to register with DNS
-  ip=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
-  fqdn=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
-  shortname=$(echo $p | grep "azure" | grep -v 'localhost' | cut -d' ' -f 3)
+  ip=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
+  fqdn=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
+  shortname=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 3)
   
   if [[ "${fqdn}" = "" ]]; then
     echo "host empty for line $p. continuing" >> /tmp/settingPrivateHostnames.out
@@ -155,14 +155,14 @@ do
   fi
 
   echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${CLOUDERA_DOMAIN}."
-  ssh -n -o "StrictHostKeyChecking=no" systest@${CLOUDERA_DNS_IP} -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
+  ssh -n -o "StrictHostKeyChecking=no" systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
 done < /etc/hosts
 
 # This key should have been set by initialize-node.sh
 key="/home/${ADMINUSER}/.ssh/id_rsa"
-if [ "$INSTALLCDH" == "True" ]
+if [ "${INSTALLCDH}" == "True" ]
 then
-  sh initialize-cloudera-server.sh "$CLUSTERNAME" "$key" "$mip" "$wip_string" $HA $ADMINUSER $PASSWORD $CMUSER $CMPASSWORD $EMAILADDRESS $BUSINESSPHONE $FIRSTNAME $LASTNAME $JOBROLE $JOBFUNCTION $COMPANY>/dev/null 2>&1
+  sh initialize-cloudera-server.sh "${CLUSTERNAME}" "${key}" "${mip}" "${wip_string}" "${HA}" "${ADMINUSER}" "${PASSWORD}" "${CMUSER}" "${CMPASSWORD}" "${EMAILADDRESS}" "${BUSINESSPHONE}" "${FIRSTNAME}" "${LASTNAME}" "${JOBROLE}" "${JOBFUNCTION}" "${COMPANY}" >/dev/null 2>&1
 fi
 log "END: Detached script to finalize initialization running. PID: $!"
 
