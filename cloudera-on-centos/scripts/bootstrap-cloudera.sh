@@ -39,7 +39,7 @@ NAMESUFFIX=$(echo $NAMESUFFIX | sed "s/^[^.]*\.//")
 CLOUDERA_DNS_IP="10.17.181.104"
 CLOUDERA_DOMAIN="azure.cloudera.com"
 
-BOOTSTRAP_LOG = "/tmp/bootstrap.out"
+BOOTSTRAP_LOG="/tmp/bootstrap.out"
 
 execname=$0
 log() {
