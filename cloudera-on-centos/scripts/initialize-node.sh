@@ -69,7 +69,10 @@ if [[ "$statusCode" != "0" ]]; then
     echo "Host resolution was fine, actually"  >> /tmp/diagnostics.out
   fi
   
+  # The code is dependent upon this file, so if it cannot be pulled down, we should fail
+  set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+  set +e
 fi
 
 chmod 600 ./id_rsa
