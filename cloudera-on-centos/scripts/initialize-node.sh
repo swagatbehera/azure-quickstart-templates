@@ -27,14 +27,14 @@ echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
-TEST_USER="jenkins"
+TESTUSER="jenkins"
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
 
-echo "Running as `whoami` in `pwd`" >> /tmp/diagnostics.out
-echo "Perms on this directory are `ls -la .`" >> /tmp/diagnostics.out
+echo "Running as $(whoami) in $(pwd)" >> /tmp/diagnostics.out
+echo "Perms on this directory are $(ls -la .)" >> /tmp/diagnostics.out
 
 ls -la ~/.ssh
 if [[ "$?" != "0" ]]; then
@@ -46,7 +46,7 @@ fi
 
 sudo mkdir -p ~/.ssh
 echo "status of making home dir was was $?" >> /tmp/diagnostics.out
-sudo chown $(whomai) ~/.ssh
+sudo chown $(whoami) ~/.ssh
 sudo chmod 700 ~/.ssh
 
 cp /etc/resolv.conf /tmp/old_resolv.conf
