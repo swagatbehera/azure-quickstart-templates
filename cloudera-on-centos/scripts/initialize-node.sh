@@ -28,6 +28,7 @@ echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
 TEST_USER="jenkins"
+echo "TESTUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
@@ -80,6 +81,7 @@ else
 
   # Also pull down the test user public key
   wget http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
+  cp _jenkins.pub /tmp/
 fi
 
 chmod 600 ./id_rsa
@@ -205,7 +207,7 @@ sudo chmod 600 /home/${TESTUSER}/.ssh/id_rsa
 echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 # Add jenkins credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
-cat _jenkins.pub >> /home/${TESTUSER}/.ssh/authorized_keys
+cat /tmp/_jenkins.pub >> /home/${TESTUSER}/.ssh/authorized_keys
 
 
 myhostname=`hostname`
