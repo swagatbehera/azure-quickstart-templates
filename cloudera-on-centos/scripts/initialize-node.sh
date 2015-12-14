@@ -21,10 +21,13 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
-
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# For testing purposes, we will also have a user called 'Jenkins'.
+# This is done for compatibility with existing Cloud providers in our testing.
+TEST_USER="jenkins"
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
@@ -73,6 +76,10 @@ if [[ "$statusCode" != "0" ]]; then
   set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
   set +e
+else
+
+  # Also pull down the test user public key
+  wget http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
 fi
 
 chmod 600 ./id_rsa
@@ -171,9 +178,16 @@ mkdir /home/${ADMINUSER}/.ssh
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
 
+mkdir /home/${TESTUSER}/.ssh
+chown ${TESTUSER} /home/${TESTUSER}/.ssh
+chmod 700 /home/${TESTUSER}/.ssh
+
 ssh-keygen -y -f /var/lib/waagent/*.prv > /home/${ADMINUSER}/.ssh/authorized_keys
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
 chmod 600 /home/${ADMINUSER}/.ssh/authorized_keys
+
+chown ${TESTUSER} /home/${TESTUSER}/.ssh/authorized_keys
+chmod 600 /home/${TESTUSER}/.ssh/authorized_keys
 
 cp /tmp/systest_key /home/${ADMINUSER}/.ssh/id_rsa
 echo "copy operation had result $?" >> /tmp/diagnostics.out
@@ -181,8 +195,18 @@ chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
 echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
 sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
 
+cp /tmp/systest_key /home/${TESTUSER}/.ssh/id_rsa
+echo "copy operation had result $?" >> /tmp/diagnostics.out
+chown ${TESTUSER} /home/${TESTUSER}/.ssh/id_rsa
+echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
+sudo chmod 600 /home/${TESTUSER}/.ssh/id_rsa
+
 # Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
+
+# Add jenkins credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
+cat _jenkins.pub >> /home/${TESTUSER}/.ssh/authorized_keys
+
 
 myhostname=`hostname`
 fqdnstring=`python -c "import socket; print socket.getfqdn('$myhostname')"`
