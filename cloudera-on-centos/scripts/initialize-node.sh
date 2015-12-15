@@ -29,6 +29,7 @@ echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # This is done for compatibility with existing Cloud providers in our testing.
 TESTUSER="jenkins"
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+useradd ${TESTUSER} -m
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
@@ -57,7 +58,7 @@ cat /etc/resolv.conf >> /tmp/diagnostics.out
 # set the configuration to not reset /etc/resolv.conf when we restart networking
 sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
-sleep 25s
+sleep 50s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "$statusCode" != "0" ]]; then
@@ -76,6 +77,9 @@ if [[ "$statusCode" != "0" ]]; then
   # The code is dependent upon this file, so if it cannot be pulled down, we should fail
   set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
+  wget --no-dns-cache http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
+  cp _jenkins.pub /tmp/
+  ls -la >> /tmp/diagnostics.out
   set +e
 else
 
@@ -104,7 +108,7 @@ hostname >> /tmp/getHostName.out
 
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
-sleep 25s
+sleep 50s
 
 ## end of hack
 
