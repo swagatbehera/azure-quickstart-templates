@@ -190,8 +190,8 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
 #use the key from the key vault as the SSH authorized key
-mkdir ~${ADMINUSER}/.ssh
-chown ${ADMINUSER} ~${ADMINUSER}/.ssh
+mkdir /home/${ADMINUSER}/.ssh
+chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
 
 mkdir ${TESTUSER_HOME}/.ssh
