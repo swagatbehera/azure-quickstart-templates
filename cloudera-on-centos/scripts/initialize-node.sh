@@ -190,20 +190,20 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
 #use the key from the key vault as the SSH authorized key
-mkdir /home/${ADMINUSER}/.ssh
-chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
+mkdir ~${ADMINUSER}/.ssh
+chown ${ADMINUSER} ~${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
 
-mkdir /home/${TESTUSER}/.ssh
-chown ${TESTUSER} /home/${TESTUSER}/.ssh
-chmod 700 /home/${TESTUSER}/.ssh
+mkdir ${TESTUSER_HOME}/.ssh
+chown ${TESTUSER} ${TESTUSER_HOME}/.ssh
+chmod 700 ${TESTUSER_HOME}/.ssh
 
 ssh-keygen -y -f /var/lib/waagent/*.prv > /home/${ADMINUSER}/.ssh/authorized_keys
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
 chmod 600 /home/${ADMINUSER}/.ssh/authorized_keys
 
-chown ${TESTUSER} /home/${TESTUSER}/.ssh/authorized_keys
-chmod 600 /home/${TESTUSER}/.ssh/authorized_keys
+chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
+chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 
 cp /tmp/systest_key /home/${ADMINUSER}/.ssh/id_rsa
 echo "copy operation had result $?" >> /tmp/diagnostics.out
@@ -211,19 +211,19 @@ chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
 echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
 sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
 
-cp /tmp/systest_key /home/${TESTUSER}/.ssh/id_rsa
+cp /tmp/systest_key ${TESTUSER_HOME}/.ssh/id_rsa
 echo "copy operation had result $?" >> /tmp/diagnostics.out
-chown ${TESTUSER} /home/${TESTUSER}/.ssh/id_rsa
+chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/id_rsa
 echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
-sudo chmod 600 /home/${TESTUSER}/.ssh/id_rsa
+sudo chmod 600 ${TESTUSER_HOME}/.ssh/id_rsa
 
 # Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQDIA0AnY2rLqFj09ZvKKFPVh+wnEU4PhKMVAGlBBjlItumxwx90BTstgnQqXK09GR4KBQAq2vpwUz4prkllj84wMrBlIAWcWXSJxO5zI4atcIDBnUw+W0dfgjMzgKAfnrg45xT+rMzQw41t1rtcURO3VgmvDHt1xAAZ/Zo5XjguOhIhdR9IOyTwyowHHcm2IGeuLuOeupAhcQc+7tEX+Jj8fxs9+0tbV4HYG3kM1Xe2r4kq5OPtM4YVOHRvqwmjmClR+i21iAs3EUWVRHI1KYywrULak7u01Y6PnI3pJ7pcO4HchgSR' >> /home/$ADMINUSER/.ssh/authorized_keys
 
 # Add jenkins credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 echo "About to publish /tmp/_jenkins.pub into authorized keys for the test user"
-cat /tmp/_jenkins.pub >> /home/${TESTUSER}/.ssh/authorized_keys
-ls -la /home/${TESTUSER}/.ssh >> /tmp/diagnostics.out
+cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
+ls -la ${TESTUSER_HOME}/.ssh >> /tmp/diagnostics.out
 
 
 myhostname=`hostname`
