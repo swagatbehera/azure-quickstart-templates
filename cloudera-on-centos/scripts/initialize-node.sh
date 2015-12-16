@@ -33,7 +33,7 @@ echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # TODO - add this code to make jenkins home directory the proper one
 # Make a home directory for this user
 TESTUSER_HOME=/var/lib/${TESTUSER}
-mkdir -p ${TESTUSER_HOME}
+# mkdir -p ${TESTUSER_HOME}
 useradd ${TESTUSER} -d ${TESTUSER_HOME}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
