@@ -25,6 +25,11 @@ NODETYPE=$7
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# Need to adjust the systest user's id higher b/c of security on YARN
+usermod -u 2345 ${ADMINUSER}
+
+id ${ADMINUSER} >> /tmp/diagnostics.out
+
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
 TESTUSER="jenkins"
