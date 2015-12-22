@@ -23,10 +23,10 @@ NODETYPE=$7
 
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
-echo "$ADMINUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Need to adjust the systest user's id higher b/c of security on YARN
-usermod -u 2345 ${ADMINUSER}
+usermod -u 2345 "${ADMINUSER}"
 
 id ${ADMINUSER} >> /tmp/diagnostics.out
 
@@ -51,18 +51,18 @@ echo "Perms on this directory are $(ls -la .)" >> /tmp/diagnostics.out
 ls -la ~/.ssh
 if [[ "$?" != "0" ]]; then
 
-  echo "~/.ssh does not exist. We are right in making this folder" >> /tmp/diagnostics.out
+  echo "${HOME}/.ssh does not exist. We are right in making this folder" >> /tmp/diagnostics.out
 else
-  echo "~/.ssh already exists. We should not be re-making this folder" >> /tmp/diagnostics.out
+  echo "${HOME}/.ssh already exists. We should not be re-making this folder" >> /tmp/diagnostics.out
 fi
 
 sudo mkdir -p ~/.ssh
 echo "status of making home dir was was $?" >> /tmp/diagnostics.out
-sudo chown $(whoami) ~/.ssh
+sudo chown "$(whoami)" ~/.ssh
 sudo chmod 700 ~/.ssh
 
 cp /etc/resolv.conf /tmp/old_resolv.conf
-sudo echo "nameserver 172.18.64.15" > /etc/resolv.conf
+echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 30s
 cat /etc/resolv.conf >> /tmp/diagnostics.out
 
@@ -107,13 +107,13 @@ cp /tmp/old_resolv.conf /etc/resolv.conf
 
 # Set the hostname
 hostname=$(hostname)
-instancename=$(echo ${hostname} | awk -F"." '{print $1}') ## TODO: Fix this
+instancename=$(echo "${hostname}" | awk -F"." '{print $1}') ## TODO: Fix this
 subdomain="${NAMESUFFIX}"
 
 instanceHostname="${instancename}.${subdomain}"
 echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
 sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
-hostname ${instancename}.${subdomain};
+hostname "${instancename}"."${subdomain}";
 hostname >> /tmp/getHostName.out
 
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
@@ -145,8 +145,8 @@ echo "Done preparing disks.  Now ls -la looks like this:" >> /tmp/ssh_diagnosis.
 ls -la / >> /tmp/ssh_diagnosis.out
 # Create Impala scratch directory
 numDataDirs=$(ls -la / | grep data | wc -l)
-echo "numDataDirs:" $numDataDirs >> /tmp/ssh_diagnosis.out
-let endLoopIter=(numDataDirs - 1)
+echo "numDataDirs: ${numDataDirs}" >> /tmp/ssh_diagnosis.out
+let endLoopIter="(numDataDirs - 1)"
 for x in $(seq 0 $endLoopIter)
 do 
   echo mkdir -p /data${x}/impala/scratch 
