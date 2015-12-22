@@ -21,50 +21,48 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
+LOG_FILE="/tmp/diagnostics.out"
+
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-# Need to adjust the systest user's id higher b/c of security on YARN
-usermod -u 2345 "${ADMINUSER}"
-
-id ${ADMINUSER} >> /tmp/diagnostics.out
-
-# For testing purposes, we will also have a user called 'Jenkins'.
-# This is done for compatibility with existing Cloud providers in our testing.
 TESTUSER="jenkins"
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# For testing purposes, we will also have a user called 'Jenkins'.
+# This is done for compatibility with existing Cloud providers in our testing.
 # Make a home directory for this user
 TESTUSER_HOME=/var/lib/${TESTUSER}
-# mkdir -p ${TESTUSER_HOME}
 useradd ${TESTUSER} -d ${TESTUSER_HOME}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
 
-# we are going to do something heinous here to pull down the key
-# we are going to swap out the /etc/resolv.conf file
+# Need to adjust the systest user's id higher b/c of security on YARN
+usermod -u 2345 "${ADMINUSER}"
 
-echo "Running as $(whoami) in $(pwd)" >> /tmp/diagnostics.out
-echo "Perms on this directory are $(ls -la .)" >> /tmp/diagnostics.out
+{
+  id ${ADMINUSER};
+  echo "Running as $(whoami) in $(pwd)";
+  echo "Perms on this directory are $(ls -la .)";
+} >> ${LOG_FILE}
 
 ls -la ~/.ssh
 if [[ "$?" != "0" ]]; then
 
-  echo "${HOME}/.ssh does not exist. We are right in making this folder" >> /tmp/diagnostics.out
+  echo "${HOME}/.ssh does not exist. We are right in making this folder" >> ${LOG_FILE}
 else
-  echo "${HOME}/.ssh already exists. We should not be re-making this folder" >> /tmp/diagnostics.out
+  echo "${HOME}/.ssh already exists. We should not be re-making this folder" >> ${LOG_FILE}
 fi
 
 sudo mkdir -p ~/.ssh
-echo "status of making home dir was was $?" >> /tmp/diagnostics.out
+echo "status of making home dir was was $?" >> ${LOG_FILE}
 sudo chown "$(whoami)" ~/.ssh
 sudo chmod 700 ~/.ssh
 
 cp /etc/resolv.conf /tmp/old_resolv.conf
 echo "nameserver 172.18.64.15" > /etc/resolv.conf
 sleep 30s
-cat /etc/resolv.conf >> /tmp/diagnostics.out
+cat /etc/resolv.conf >> ${LOG_FILE}
 
 # set the configuration to not reset /etc/resolv.conf when we restart networking
 sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
@@ -72,17 +70,17 @@ service network restart
 sleep 100s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
-if [[ "$statusCode" != "0" ]]; then
-  echo "pulling down file failed with code $statusCode" >> /tmp/diagnostics.out
-  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> /tmp/diagnostics.out
-  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> /tmp/diagnostics.out
+if [[ "${statusCode}" != "0" ]]; then
+  echo "pulling down file failed with code $statusCode" >> ${LOG_FILE}
+  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> ${LOG_FILE}
+  wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> ${LOG_FILE}
 
   # let's diagnose if it's a resolution issue
   host -v github.mtv.cloudera.com
   if [[ "$?" != "0" ]]; then
-    echo "We could not resolve the host"  >> /tmp/diagnostics.out
+    echo "We could not resolve the host"  >> ${LOG_FILE}
   else
-    echo "Host resolution was fine, actually"  >> /tmp/diagnostics.out
+    echo "Host resolution was fine, actually"  >> ${LOG_FILE}
   fi
 
   # The code is dependent upon this file, so if it cannot be pulled down, we should fail
@@ -90,14 +88,14 @@ if [[ "$statusCode" != "0" ]]; then
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
   wget --no-dns-cache http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
   cp _jenkins.pub /tmp/
-  ls -la >> /tmp/diagnostics.out
+  ls -la >> ${LOG_FILE}
   set +e
 else
 
   # Also pull down the test user public key
   wget --no-dns-cache http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
   cp _jenkins.pub /tmp/
-  ls -la >> /tmp/diagnostics.out
+  ls -la >> ${LOG_FILE}
 fi
 
 chmod 600 ./id_rsa
@@ -120,32 +118,34 @@ sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
 sleep 50s
 
-echo "here is the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
-ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
-echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
+{
+  echo "here is the ~/.ssh/ directory";
+  ls -la ~/.ssh/;
+  echo "done listing the ~/.ssh/ directory";
+} >> ${LOG_FILE}
 
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
 then
   echo "preparing master node" >> /tmp/ssh_diagnosis.out
   bash ./prepare-masternode-disks.sh
-  echo "preparing master node exited with code $?" >> /tmp/ssh_diagnosis.out
+  echo "preparing master node exited with code $?" >> ${LOG_FILE}
 
 elif [ "$NODETYPE" == "datanode" ]
 then
   echo "preparing data node" >> /tmp/ssh_diagnosis.out
   bash ./prepare-datanode-disks.sh
-  echo "preparing data node exited with code $?" >> /tmp/ssh_diagnosis.out
+  echo "preparing data node exited with code $?" >> ${LOG_FILE}
 else
   echo "#unknown type, default to datanode"
   bash ./prepare-datanode-disks.sh
 fi
 
-echo "Done preparing disks.  Now ls -la looks like this:" >> /tmp/ssh_diagnosis.out
-ls -la / >> /tmp/ssh_diagnosis.out
+echo "Done preparing disks.  Now ls -la looks like this:" >> ${LOG_FILE}
+ls -la / >> ${LOG_FILE}
 # Create Impala scratch directory
 numDataDirs=$(ls -la / | grep data | wc -l)
-echo "numDataDirs: ${numDataDirs}" >> /tmp/ssh_diagnosis.out
+echo "numDataDirs: ${numDataDirs}" >> ${LOG_FILE}
 let endLoopIter="(numDataDirs - 1)"
 for x in $(seq 0 $endLoopIter)
 do 
@@ -205,15 +205,15 @@ chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 
 cp /tmp/systest_key /home/${ADMINUSER}/.ssh/id_rsa
-echo "copy operation had result $?" >> /tmp/diagnostics.out
+echo "copy operation had result $?" >> ${LOG_FILE}
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
-echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
+echo "adjust perms operation had result $?" >> ${LOG_FILE}
 sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
 
 cp /tmp/systest_key ${TESTUSER_HOME}/.ssh/id_rsa
-echo "copy operation had result $?" >> /tmp/diagnostics.out
+echo "copy operation had result $?" >> ${LOG_FILE}
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/id_rsa
-echo "adjust perms operation had result $?" >> /tmp/diagnostics.out
+echo "adjust perms operation had result $?" >> ${LOG_FILE}
 sudo chmod 600 ${TESTUSER_HOME}/.ssh/id_rsa
 
 # Add systest credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
@@ -222,15 +222,10 @@ echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQ
 # Add jenkins credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 echo "About to publish /tmp/_jenkins.pub into authorized keys for the test user"
 cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
-ls -la ${TESTUSER_HOME}/.ssh >> /tmp/diagnostics.out
+ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
 
 
-myhostname=`hostname`
-fqdnstring=`python -c "import socket; print socket.getfqdn('$myhostname')"`
+myhostname=$(hostname)
+fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
 sed -i "s/.*HOSTNAME.*/HOSTNAME=${fqdnstring}/g" /etc/sysconfig/network
 /etc/init.d/network restart
-
-#disable password authentication in ssh
-#sed -i "s/UsePAM\s*yes/UsePAM no/" /etc/ssh/sshd_config
-#sed -i "s/PasswordAuthentication\s*yes/PasswordAuthentication no/" /etc/ssh/sshd_config
-#/etc/init.d/sshd restart
