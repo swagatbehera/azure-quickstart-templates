@@ -77,15 +77,8 @@ log "finished installing external DB"
 #######################################################################################################################
 
 log "start cloudera-scm-server services"
-#service cloudera-scm-server-db start >> /tmp/initialize-cloudera-server.log
 service cloudera-scm-server start >> /tmp/initialize-cloudera-server.log
 
-#log "Create HIVE metastore DB Cloudera embedded PostgreSQL"
-#export PGPASSWORD=$(head -1 /var/lib/cloudera-scm-server-db/data/generated_password.txt)
-#SQLCMD=( """CREATE ROLE hive LOGIN PASSWORD 'hive';""" """CREATE DATABASE hive OWNER hive ENCODING 'UTF8';""" """ALTER DATABASE hive SET standard_conforming_strings = off;""" )
-#for SQL in "${SQLCMD[@]}"; do
-#	psql -A -t -d scm -U cloudera-scm -h localhost -p 5432 -c "${SQL}" >> /tmp/initialize-cloudera-server.log
-#done
 while ! (exec 6<>/dev/tcp/$(hostname)/7180) ; do log 'Waiting for cloudera-scm-server to start...'; sleep 15; done
 log "END: master node deployments"
 
@@ -94,12 +87,10 @@ rpm -ivh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 yum -y install python-pip >> /tmp/initialize-cloudera-server.log
 pip install cm_api >> /tmp/initialize-cloudera-server.log
 
-# trap file to indicate done
 log "Finished setting up CM and Python"
 
 # Execute script to deploy Cloudera cluster
 log "BEGIN: CM deployment - starting"
-# mingrui changed command to print both key info and password.
 logCmd="Command: python cmxDeployOnIbiza.py -n "\""$ClusterName"\"" -u "\""$User"\"" -p "\""$Password"\"" -k "\""$key"\"" -m "\""$mip"\"" -w "\""$worker_ip"\"" -c " \""$cmUser"\"" -s "\""$cmPassword"\"""
 if "${HA}"; then
     logCmd="${logCmd} -a"
