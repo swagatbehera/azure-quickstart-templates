@@ -58,8 +58,8 @@ def init_cluster():
     """
     #using default username/password to login first, create new admin user base on provided value, then delete admin
     #if the requested cmcredential is admin then skip the below steps
+    api = ApiResource(server_host=cmx.cm_server, username="admin", password="admin")
     if (cmx.username != "admin"):
-        api = ApiResource(server_host=cmx.cm_server, username="admin", password="admin")
         api.create_user(cmx.username, cmx.password, ['ROLE_ADMIN'])
         api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         api.delete_user("admin")
