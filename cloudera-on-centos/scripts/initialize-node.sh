@@ -11,8 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+LOG_FILE="/tmp/diagnostics.out"
+HOSTNAME_LOG_FILE="/tmp/hostnames.out"
+echo "initializing nodes..." >> ${LOG_FILE}
+
 #TODO: Remove unused arguments and re-architect calling script to not supply them
-echo "initializing nodes..."
 IPPREFIX=$1
 NAMEPREFIX=$2
 NAMESUFFIX=$3
@@ -21,18 +24,18 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
-LOG_FILE="/tmp/diagnostics.out"
+TESTUSER="jenkins"
+TESTUSER_HOME=/var/lib/${TESTUSER}
 
 # Disable the need for a tty when running sudo and allow passwordless sudo for the admin user
 sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-TESTUSER="jenkins"
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
 # Make a home directory for this user
-TESTUSER_HOME=/var/lib/${TESTUSER}
+
 useradd ${TESTUSER} -d ${TESTUSER_HOME}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
@@ -46,6 +49,7 @@ usermod -u 2345 "${ADMINUSER}"
   echo "Perms on this directory are $(ls -la .)";
 } >> ${LOG_FILE}
 
+# Verify that the directory necessary for the private key is available
 ls -la ~/.ssh
 if [[ "$?" != "0" ]]; then
 
@@ -71,7 +75,7 @@ sleep 100s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "${statusCode}" != "0" ]]; then
-  echo "pulling down file failed with code $statusCode" >> ${LOG_FILE}
+  echo "pulling down file failed with code ${statusCode}" >> ${LOG_FILE}
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa >> ${LOG_FILE}
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa 2>> ${LOG_FILE}
 
@@ -93,9 +97,11 @@ if [[ "${statusCode}" != "0" ]]; then
 else
 
   # Also pull down the test user public key
+  set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
   cp _jenkins.pub /tmp/
   ls -la >> ${LOG_FILE}
+  set +e
 fi
 
 chmod 600 ./id_rsa
@@ -105,14 +111,14 @@ cp /tmp/old_resolv.conf /etc/resolv.conf
 
 # Set the hostname
 hostname=$(hostname)
-instancename=$(echo "${hostname}" | awk -F"." '{print $1}') ## TODO: Fix this
+instancename=$(echo "${hostname}" | awk -F"." '{print $1}')
 subdomain="${NAMESUFFIX}"
 
 instanceHostname="${instancename}.${subdomain}"
-echo "instanceHostname is: $instanceHostName" >> /tmp/setupPrivateHostname.out
+echo "instanceHostname is: $instanceHostName" >> ${HOSTNAME_LOG_FILE}
 sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
 hostname "${instancename}"."${subdomain}";
-hostname >> /tmp/getHostName.out
+hostname >> ${HOSTNAME_LOG_FILE}
 
 sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
@@ -127,17 +133,17 @@ sleep 50s
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
 then
-  echo "preparing master node" >> /tmp/ssh_diagnosis.out
+  echo "preparing master node" >> ${LOG_FILE}
   bash ./prepare-masternode-disks.sh
   echo "preparing master node exited with code $?" >> ${LOG_FILE}
 
 elif [ "$NODETYPE" == "datanode" ]
 then
-  echo "preparing data node" >> /tmp/ssh_diagnosis.out
+  echo "preparing data node" >> ${LOG_FILE}
   bash ./prepare-datanode-disks.sh
   echo "preparing data node exited with code $?" >> ${LOG_FILE}
 else
-  echo "#unknown type, default to datanode"
+  echo "#unknown type, default to datanode" >> ${LOG_FILE}
   bash ./prepare-datanode-disks.sh
 fi
 
@@ -149,15 +155,12 @@ echo "numDataDirs: ${numDataDirs}" >> ${LOG_FILE}
 let endLoopIter="(numDataDirs - 1)"
 for x in $(seq 0 $endLoopIter)
 do 
-  echo mkdir -p /data${x}/impala/scratch 
   mkdir -p /data${x}/impala/scratch
   chmod 777 /data${x}/impala/scratch
 done
 
 setenforce 0 >> /tmp/setenforce.out
-cat /etc/selinux/config > /tmp/beforeSelinux.out
 sed -i 's^SELINUX=enforcing^SELINUX=disabled^g' /etc/selinux/config || true
-cat /etc/selinux/config > /tmp/afterSeLinux.out
 
 /etc/init.d/iptables save
 /etc/init.d/iptables stop
@@ -188,7 +191,7 @@ echo net.ipv4.tcp_wmem="4096 65536 4194304" >> /etc/sysctl.conf
 echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
-#use the key from the key vault as the SSH authorized key
+# Set up private key for $ADMINUSER and $TESTUSER
 mkdir /home/${ADMINUSER}/.ssh
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
@@ -224,8 +227,8 @@ echo "About to publish /tmp/_jenkins.pub into authorized keys for the test user"
 cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
 
-
-myhostname=$(hostname)
-fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
-sed -i "s/.*HOSTNAME.*/HOSTNAME=${fqdnstring}/g" /etc/sysconfig/network
-/etc/init.d/network restart
+# TODO - Find out if this is useful?
+#myhostname=$(hostname)
+#fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
+#sed -i "s/.*HOSTNAME.*/HOSTNAME=${fqdnstring}/g" /etc/sysconfig/network
+#/etc/init.d/network restart
