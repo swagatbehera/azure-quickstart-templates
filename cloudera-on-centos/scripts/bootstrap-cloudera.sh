@@ -47,16 +47,16 @@ log() {
 }
 
 addPrivateIpToNodes() {
-  
+
   publicHostname=${1}
   isMasterNode=${2}
-  
+
   if [[ "${2}" = "true" ]]; then
     ext="mn"
   else
     ext="dn"
   fi
-  
+
   privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
@@ -116,7 +116,7 @@ sleep 25
 while read p; 
 do
   host=$(echo "${p}" | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
-  
+
   if [[ "${host}" = "" ]]; then
     echo "host empty for line $p. continuing" >> ${BOOTSTRAP_LOG}
     continue
@@ -143,7 +143,7 @@ do
   ip=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
   fqdn=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 2)
   shortname=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 3)
-  
+
   if [[ "${fqdn}" = "" ]]; then
     echo "host empty for line $p. continuing" >> /tmp/settingPrivateHostnames.out
     continue
