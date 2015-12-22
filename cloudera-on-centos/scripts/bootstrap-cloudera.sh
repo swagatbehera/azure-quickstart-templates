@@ -113,7 +113,7 @@ sudo service network restart
 sleep 25
 
 # Then set resolv.conf on the others
-while read p; 
+while read p;
 do
   host=$(echo "${p}" | grep "azure" | grep -v 'localhost' | grep -v "mn0" | cut -d' ' -f 1)
 
@@ -137,7 +137,7 @@ done < /etc/hosts
 sleep 30s
 echo "Done adjusting /etc/resolv.conf on all hosts" >> ${BOOTSTRAP_LOG}
 
-while read p; 
+while read p;
 do
   # establish properties necessary to register with DNS
   ip=$(echo "${p}" | grep "azure" | grep -v 'localhost' | cut -d' ' -f 1)
