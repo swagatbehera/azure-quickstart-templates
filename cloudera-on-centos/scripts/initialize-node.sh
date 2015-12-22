@@ -35,15 +35,12 @@ id ${ADMINUSER} >> /tmp/diagnostics.out
 TESTUSER="jenkins"
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-# TODO - add this code to make jenkins home directory the proper one
 # Make a home directory for this user
 TESTUSER_HOME=/var/lib/${TESTUSER}
 # mkdir -p ${TESTUSER_HOME}
 useradd ${TESTUSER} -d ${TESTUSER_HOME}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
-#useradd ${TESTUSER} -m
-
 
 # we are going to do something heinous here to pull down the key
 # we are going to swap out the /etc/resolv.conf file
@@ -87,7 +84,7 @@ if [[ "$statusCode" != "0" ]]; then
   else
     echo "Host resolution was fine, actually"  >> /tmp/diagnostics.out
   fi
-  
+
   # The code is dependent upon this file, so if it cannot be pulled down, we should fail
   set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
@@ -106,7 +103,6 @@ fi
 chmod 600 ./id_rsa
 cp ./id_rsa /tmp/systest_key
 cp ./id_rsa ~/.ssh/
-
 cp /tmp/old_resolv.conf /etc/resolv.conf
 
 # Set the hostname
@@ -124,8 +120,6 @@ sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
 service network restart
 sleep 50s
 
-## end of hack
-
 echo "here is the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
 ls -la ~/.ssh/ >> /tmp/ssh_diagnosis.out
 echo "done listing the ~/.ssh/ directory" >> /tmp/ssh_diagnosis.out
@@ -136,7 +130,7 @@ then
   echo "preparing master node" >> /tmp/ssh_diagnosis.out
   bash ./prepare-masternode-disks.sh
   echo "preparing master node exited with code $?" >> /tmp/ssh_diagnosis.out
-  
+
 elif [ "$NODETYPE" == "datanode" ]
 then
   echo "preparing data node" >> /tmp/ssh_diagnosis.out
