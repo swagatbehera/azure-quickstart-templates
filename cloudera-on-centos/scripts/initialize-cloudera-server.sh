@@ -29,7 +29,6 @@ JOBFUNCTION=${15}
 COMPANY=${16}
 
 log "BEGIN: master node deployments"
-
 log "Beginning process of disabling SELinux"
 
 log "Running as $(whoami) on $(hostname)"
@@ -41,14 +40,7 @@ setenforce 0 >> /tmp/setenforce.out
 
 exitcode=$?
 log "Done with settiing enforce. Its exit code was $exitcode"
-
 log "Running setenforce inline as $(setenforce 0)"
-
-getenforce
-log "Running getenforce inline as $(getenforce)"
-getenforce >> /tmp/getenforce.out
-
-log "should be done logging things"
 
 
 cat /etc/selinux/config > /tmp/beforeSelinux.out
@@ -97,28 +89,25 @@ service cloudera-scm-server start >> /tmp/initialize-cloudera-server.log
 while ! (exec 6<>/dev/tcp/$(hostname)/7180) ; do log 'Waiting for cloudera-scm-server to start...'; sleep 15; done
 log "END: master node deployments"
 
-
-
 # Set up python
 rpm -ivh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm >> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
 yum -y install python-pip >> /tmp/initialize-cloudera-server.log
 pip install cm_api >> /tmp/initialize-cloudera-server.log
 
 # trap file to indicate done
-log "creating file to indicate finished"
-touch /tmp/readyFile
+log "Finished setting up CM and Python"
 
 # Execute script to deploy Cloudera cluster
 log "BEGIN: CM deployment - starting"
 # mingrui changed command to print both key info and password.
 logCmd="Command: python cmxDeployOnIbiza.py -n "\""$ClusterName"\"" -u "\""$User"\"" -p "\""$Password"\"" -k "\""$key"\"" -m "\""$mip"\"" -w "\""$worker_ip"\"" -c " \""$cmUser"\"" -s "\""$cmPassword"\"""
-if $HA; then
-    logCmd="$logCmd -a"
+if "${HA}"; then
+    logCmd="${logCmd} -a"
 fi
-log $logCmd
+log "${logCmd}"
 if $HA; then
-    python cmxDeployOnIbiza.py -n "$ClusterName" -u $User -p $Password  -m "$mip" -w "$worker_ip" -a -c $cmUser -s $cmPassword -e -r "$EMAILADDRESS" -b "$BUSINESSPHONE" -f "$FIRSTNAME" -t "$LASTNAME" -o "$JOBROLE" -i "$JOBFUNCTION" -y "$COMPANY">> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
+    python cmxDeployOnIbiza.py -n "${ClusterName}" -u "${User}" -p "${Password}"  -m "$mip" -w "$worker_ip" -a -c "${cmUser}" -s "${cmPassword}" -e -r "${EMAILADDRESS}" -b "${BUSINESSPHONE}" -f "${FIRSTNAME}" -t "${LASTNAME}" -o "${JOBROLE}" -i "${JOBFUNCTION}" -y "${COMPANY}">> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
 else
-    python cmxDeployOnIbiza.py -n "$ClusterName" -u $User -p $Password  -m "$mip" -w "$worker_ip" -c $cmUser -s $cmPassword -e -r "$EMAILADDRESS" -b "$BUSINESSPHONE" -f "$FIRSTNAME" -t "$LASTNAME" -o "$JOBROLE" -i "$JOBFUNCTION" -y "$COMPANY">> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
+    python cmxDeployOnIbiza.py -n "${ClusterName}" -u "${User}" -p "${Password}"  -m "$mip" -w "$worker_ip" -c "${cmUser}" -s "${cmPassword}" -e -r "${EMAILADDRESS}" -b "${BUSINESSPHONE}" -f "${FIRSTNAME}" -t "${LASTNAME}" -o "${JOBROLE}" -i "${JOBFUNCTION}" -y "${COMPANY}">> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
 fi
 log "END: CM deployment ended"
