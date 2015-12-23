@@ -1,23 +1,16 @@
 #!/bin/bash
 
-# ok this is the fun part. Let's create a file here
+# Creating a file inline
 cat > inputs2.sh << 'END'
-  
-  helloFromInputs() {
-    
-    echo "hello from printinputs.sh"
-  }
 
-  printFstab() {
-    echo "Here is the fstab from `hostname`"
-    cat /etc/fstab
-    echo "Now sudo print fstab from `hostname`"
-    sudo cat /etc/fstab
-  }
-
+printFstab() {
+  echo "Here is the fstab from `hostname`"
+  cat /etc/fstab
+  echo "Now sudo print fstab from `hostname`"
+  sudo cat /etc/fstab
+}
 
 mountDrive() {
-
   driveName=$1
   driveId=$2
   echo "$(hostname) : /data${2} :About to mount drive"
@@ -26,11 +19,9 @@ mountDrive() {
   echo "UUID=$UUID  /data${2}    ext4   defaults,noatime,discard,barrier=0 0 0" | sudo tee -a /etc/fstab
   cat /etc/fstab
   echo "$(hostname) : /data${2} : Done mounting drive"
-
 }
 
 unmountDrive() {
-
   driveName=$1
   driveId=$2
   echo "$(hostname) : /data${2} : About to unmount drive"
@@ -41,7 +32,6 @@ unmountDrive() {
 
   echo "$(hostname) : /data${2} :done trying it with sudo"
   echo "$(hostname) : /data${2} :Done unmounting drive $(hostname): $1"
-
 }
 
 formatAndMountDrive() {
@@ -94,16 +84,15 @@ unmountAllDrives() {
 
 mountDriveForLogCloudera()
 {
-	dirname=/log
-	drivename=/dev/sdc
-	mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 $drivename
-	mkdir $dirname
-	mount -o noatime,barrier=1 -t ext4 $drivename $dirname
-	UUID=`sudo lsblk -no UUID $drivename`
-    echo "UUID=$UUID   $dirname    ext4   defaults,noatime,barrier=0 0 1" | sudo tee -a /etc/fstab
-	mkdir /log/cloudera
-	ln -s /log/cloudera /opt/cloudera
-
+  dirname=/log
+  drivename=/dev/sdc
+  mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 $drivename
+  mkdir $dirname
+  mount -o noatime,barrier=1 -t ext4 $drivename $dirname
+  UUID=`sudo lsblk -no UUID $drivename`
+  echo "UUID=$UUID   $dirname    ext4   defaults,noatime,barrier=0 0 1" | sudo tee -a /etc/fstab
+  mkdir /log/cloudera
+  ln -s /log/cloudera /opt/cloudera
 }
 
 formatAndMountAllDrives() {
@@ -119,5 +108,5 @@ formatAndMountAllDrives() {
 }
 END
 
-bash -c "source ./inputs2.sh; helloFromInputs; printFstab; unmountAllDrives; mountDriveForLogCloudera; formatAndMountAllDrives;"
+bash -c "source ./inputs2.sh; printFstab; unmountAllDrives; mountDriveForLogCloudera; formatAndMountAllDrives;"
 exit 0  # and this is useful
