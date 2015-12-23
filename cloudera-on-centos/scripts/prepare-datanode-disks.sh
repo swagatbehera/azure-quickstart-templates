@@ -3,14 +3,16 @@
 # Creating a file inline
 cat > inputs2.sh << 'END'
 
-printFstab() {
+printFstab() 
+{
   echo "Here is the fstab from `hostname`"
   cat /etc/fstab
   echo "Now sudo print fstab from `hostname`"
   sudo cat /etc/fstab
 }
 
-mountDrive() {
+mountDrive() 
+{
   driveName="${1}"
   driveId="${2}"
   mount -o noatime,barrier=0 -t ext4 "${driveName}" /data${driveId}
@@ -18,26 +20,30 @@ mountDrive() {
   echo "UUID=${UUID}  /data${driveId}    ext4   defaults,noatime,discard,barrier=0 0 0" | sudo tee -a /etc/fstab
 }
 
-unmountDrive() {
+unmountDrive() 
+{
   driveName=$1
   umount ${driveName}
   sudo umount ${driveName}
 }
 
-formatAndMountDrive() {
+formatAndMountDrive() 
+{
   drive=$1
-  mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 $drive
+  index=$2
+  mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 ${drive}
 
-  rm -rf /data${2} || true
-  mkdir -p /data${2}
-  chmod 777 /data${2}
+  rm -rf /data${index} || true
+  mkdir -p /data${index}
+  chmod 777 /data${index}
 
-  mount -o noatime,barrier=0 -t ext4 $drive /data${2}
+  mount -o noatime,barrier=0 -t ext4 ${drive} /data${index}
   UUID=$(sudo lsblk -no UUID $drive)
-  echo "UUID=${UUID}   /data${2}    ext4   defaults,noatime,discard,barrier=0 0 0" | sudo tee -a /etc/fstab
+  echo "UUID=${UUID}   /data${index}    ext4   defaults,noatime,discard,barrier=0 0 0" | sudo tee -a /etc/fstab
 }
 
-mountAllDrives() {
+mountAllDrives() 
+{
   echo "Mounting all drives"
   let i=0 || true
   for x in $(sfdisk -l 2>/dev/null | cut -d' ' -f 2 | grep /dev | grep -v "/dev/sda" | grep -v "/dev/sdb" | sed "s^:^^");
@@ -47,7 +53,8 @@ mountAllDrives() {
   done
 }
 
-unmountAllDrives() {
+unmountAllDrives() 
+{
   let i=0 || true
   for x in $(sfdisk -l 2>/dev/null | cut -d' ' -f 2 | grep /dev | grep -v "/dev/sda" | grep -v "/dev/sdb" | sed "s^:^^");
   do
@@ -70,7 +77,8 @@ mountDriveForLogCloudera()
   ln -s  ${dirname}/cloudera /opt/cloudera
 }
 
-formatAndMountAllDrives() {
+formatAndMountAllDrives() 
+{
   let i=0 || true
   for x in $(sfdisk -l 2>/dev/null | cut -d' ' -f 2 | grep /dev | grep -v "/dev/sda" | grep -v "/dev/sdb" | grep -v "/dev/sdc" | sed "s^:^^");
   do
