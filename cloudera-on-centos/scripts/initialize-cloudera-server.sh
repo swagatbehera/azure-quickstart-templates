@@ -42,13 +42,7 @@ exitcode=$?
 log "Done with settiing enforce. Its exit code was $exitcode"
 log "Running setenforce inline as $(setenforce 0)"
 
-
-cat /etc/selinux/config > /tmp/beforeSelinux.out
-log "ABOUT to replace enforcing with disabled"
 sed -i 's^SELINUX=enforcing^SELINUX=disabled^g' /etc/selinux/config || true
-
-cat /etc/selinux/config > /tmp/afterSeLinux.out
-log "Done disabling selinux"
 
 set +e
 
