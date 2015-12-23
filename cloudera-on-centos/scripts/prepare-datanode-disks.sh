@@ -5,9 +5,9 @@ cat > inputs2.sh << 'END'
 
 printFstab() 
 {
-  echo "Here is the fstab from `hostname`"
+  echo "Here is the fstab from $(hostname)"
   cat /etc/fstab
-  echo "Now sudo print fstab from `hostname`"
+  echo "Now sudo print fstab from $(hostname)"
   sudo cat /etc/fstab
 }
 
