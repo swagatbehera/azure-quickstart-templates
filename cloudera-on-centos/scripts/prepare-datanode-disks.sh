@@ -109,4 +109,4 @@ formatAndMountAllDrives() {
 END
 
 bash -c "source ./inputs2.sh; printFstab; unmountAllDrives; mountDriveForLogCloudera; formatAndMountAllDrives;"
-exit 0  # and this is useful
+exit 0
