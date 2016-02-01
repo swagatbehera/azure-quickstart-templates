@@ -166,6 +166,16 @@ sed -i 's^SELINUX=enforcing^SELINUX=disabled^g' /etc/selinux/config || true
 /etc/init.d/iptables stop
 chkconfig iptables off
 
+if which yum; then
+ yum clean all
+fi
+if which apt-get; then
+ apt-get update
+fi
+if which zypper; then
+ zypp clean all
+fi
+
 yum install -y ntp
 service ntpd start
 service ntpd status
