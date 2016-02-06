@@ -258,7 +258,7 @@
       "dataNodeAddressStart": "[parameters('dataNodeAddressStart')]",
       "virtualNetworkName": "[parameters('virtualNetworkName')]",
       "virtualNetworkSubnetName": "[parameters('subnetName')]",
-      "virtualNetworkResourceGroup" : "[parameters('virtualNetworkResourceGroup')]"
+      "virtualNetworkResourceGroup" : "[variables('virtualNetworkResourceGroup')]"
     }
   },
   "resources": [
