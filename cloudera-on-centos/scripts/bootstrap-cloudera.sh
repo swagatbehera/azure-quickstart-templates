@@ -173,5 +173,17 @@ then
   done < /etc/hosts
 
   sh initialize-cloudera-server.sh "${CLUSTERNAME}" "${key}" "${mip}" "${wip_string}" "${HA}" "${ADMINUSER}" "${PASSWORD}" "${CMUSER}" "${CMPASSWORD}" "${EMAILADDRESS}" "${BUSINESSPHONE}" "${FIRSTNAME}" "${LASTNAME}" "${JOBROLE}" "${JOBFUNCTION}" "${COMPANY}" >/dev/null 2>&1
+
+  echo "Final step, installing Hive samples via Hue"
+  
+  # This takes advantage of the assumption that Hue is running on -mn0, which is where this is running.
+  # This may not work in HA mode, for example.
+  # Also assumes credentials are admin:admin, which may not be the case
+  curl -vv -X POST -u 'admin:admin' http://localhost:8888/beeswax/install_examples
+  echo $?
+  
+  echo "Done installing Hive examples"
 fi
+
+
 log "END: Detached script to finalize initialization running. PID: $!"
