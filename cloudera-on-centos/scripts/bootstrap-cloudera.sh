@@ -179,7 +179,7 @@ then
   # This takes advantage of the assumption that Hue is running on -mn0, which is where this is running.
   # This may not work in HA mode, for example.
   # Also assumes credentials are admin:admin, which may not be the case
-  curl -vv -X POST -u 'admin:admin' http://localhost:8888/beeswax/install_examples
+  curl -vv -X POST -u 'admin:admin' http://$(hostname):8888/beeswax/install_examples
   echo $?
   
   echo "Done installing Hive examples"
