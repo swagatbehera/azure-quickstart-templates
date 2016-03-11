@@ -179,7 +179,7 @@ then
   # This takes advantage of the assumption that Hue is running on -mn0, which is where this is running.
   # This may not work in HA mode, for example.
   # Also assumes credentials are admin:admin, which may not be the case
-  install -y expect
+  yum install -y expect
   export HUE_CONF_DIR="/var/run/cloudera-scm-agent/process/`ls -1 /var/run/cloudera-scm-agent/process | grep HUE | sort -n | tail -1 `"
   #HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue
   
