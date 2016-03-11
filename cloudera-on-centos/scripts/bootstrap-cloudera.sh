@@ -186,25 +186,25 @@ then
   # Create a here document to set up a Hue username
   echo "This will create a here document"
 
-  cat<<-'EOF' > generate_admin.expect
-  #! /usr/bin/expect -f
+cat<< 'EOF' > generate_admin.expect
+#! /usr/bin/expect -f
 
-  set timeout 60
-  set username [lindex $argv 0]
-  set password [lindex $argv 1]
+set timeout 60
+set username [lindex $argv 0]
+set password [lindex $argv 1]
 
-  spawn /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue createsuperuser
-  expect "Usernam*"
-  send "$username\r"
-  expect "Email address:"
-  send "noreply@cloudera.com\r"
-  expect "Password:"
-  send "$password\r"
-  expect "Password (again):"
-  send "$password\r"
-  expect eof
+spawn /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue createsuperuser
+expect "Usernam*"
+send "$username\r"
+expect "Email address:"
+send "noreply@cloudera.com\r"
+expect "Password:"
+send "$password\r"
+expect "Password (again):"
+send "$password\r"
+expect eof
 
-  EOF
+EOF
 
   echo "Done generating the administration creation script"
   chmod u+x ./generate_admin.expect
