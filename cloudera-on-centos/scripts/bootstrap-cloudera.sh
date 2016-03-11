@@ -179,10 +179,46 @@ then
   # This takes advantage of the assumption that Hue is running on -mn0, which is where this is running.
   # This may not work in HA mode, for example.
   # Also assumes credentials are admin:admin, which may not be the case
-  curl -vv -X POST -u 'admin:admin' http://$(hostname):8888/beeswax/install_examples
-  echo $?
+  install -y expect
+  export HUE_CONF_DIR="/var/run/cloudera-scm-agent/process/`ls -1 /var/run/cloudera-scm-agent/process | grep HUE | sort -n | tail -1 `"
+  #HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue
   
-  echo "Done installing Hive examples"
+  # Create a here document to set up a Hue username
+  echo "This will create a here document"
+
+  cat<<-'EOF' > generate_admin.expect
+  #! /usr/bin/expect -f
+
+  set timeout 60
+  set username [lindex $argv 0]
+  set password [lindex $argv 1]
+
+  spawn /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue createsuperuser
+  expect "Usernam*"
+  send "$username\r"
+  expect "Email address:"
+  send "noreply@cloudera.com\r"
+  expect "Password:"
+  send "$password\r"
+  expect "Password (again):"
+  send "$password\r"
+  expect eof
+
+  EOF
+
+  echo "Done generating the administration creation script"
+  chmod u+x ./generate_admin.expect
+  ls -la
+  
+  ./generate_admin.expect admin admin
+  
+  echo "Done installing creating superuser"
+  
+  echo "Loading samples"
+  sudo -u systest HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue beeswax_install_examples beeswax
+  echo "Should be done loading samples"
+  sudo -u hdfs hadoop fs -ls /user/hive/warehosue
+  
 fi
 
 
