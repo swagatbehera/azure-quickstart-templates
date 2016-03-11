@@ -185,7 +185,8 @@ then
   
   # Create a here document to set up a Hue username
   echo "This will create a here document"
-
+  cd /tmp
+  set -x
 cat<< 'EOF' > generate_admin.expect
 #! /usr/bin/expect -f
 
