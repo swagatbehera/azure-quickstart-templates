@@ -212,6 +212,8 @@ expect eof
 
 EOF
 
+# thoughts: Run first and fail as Hive, then try it with Hue. That seems to work.......
+
   echo "Done generating the administration creation script"
   chmod u+x ./generate_admin.expect
   ls -la
