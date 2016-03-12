@@ -216,7 +216,7 @@ EOF
   chmod u+x ./generate_admin.expect
   ls -la
   
-  ./generate_admin.expect admin admin
+  sudo ./generate_admin.expect admin admin
   
   echo "Done installing creating superuser"
   
