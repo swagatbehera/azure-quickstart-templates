@@ -183,6 +183,11 @@ then
   export HUE_CONF_DIR="/var/run/cloudera-scm-agent/process/`ls -1 /var/run/cloudera-scm-agent/process | grep HUE | sort -n | tail -1 `"
   #HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue
   
+  
+  # This is so that the admin user can install samples
+  sudo -u hdfs hadoop fs -chmod 777 /
+  sudo -u hdfs hadoop fs -chmod 777 /user/
+  
   # Create a here document to set up a Hue username
   echo "This will create a here document"
   cd /tmp
