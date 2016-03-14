@@ -223,11 +223,14 @@ EOF
   echo "Done installing creating superuser"
   
   echo "Loading samples"
-  
+  sudo chmod 777 -R /tmp/logs
   # This is odd. Should remove, but let's see if my theory works
   sudo -u hive HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue beeswax_install_examples beeswax
 
+  sudo chmod 777 -R /tmp/logs
   sudo -u hue HUE_IGNORE_PASSWORD_SCRIPT_ERRORS=1 HUE_DATABASE_PASSWORD=password /opt/cloudera/parcels/CDH/lib/hue/build/env/bin/hue beeswax_install_examples beeswax
+
+  sudo chmod 777 -R /tmp/logs
   echo "Should be done loading samples"
   sudo -u hdfs hadoop fs -ls /user/hive/warehosue
   
