@@ -223,7 +223,7 @@ EOF
   echo "Done installing creating superuser"
   echo "Loading samples"
  
-  curl -L -vv -e "$(hostname):8888/accounts/login/" -D - -X GET   http://$(hostname):8888/impala/install_examples -d "{'username' : admin, 'password': admin }"
+  curl -L -vv -e "$(hostname):8888/accounts/login/" -D - -X GET   http://$(hostname):8888/beeswax/install_examples -d "{'username' : admin, 'password': admin }"
   
   #sudo chmod 777 -R /tmp/logs
   # This is odd. Should remove, but let's see if my theory works
