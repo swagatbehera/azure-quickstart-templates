@@ -232,7 +232,7 @@ EOF
 
   sudo chmod 777 -R /tmp/logs
   echo "Should be done loading samples"
-  sudo -u hdfs hadoop fs -ls /user/hive/warehosue
+  sudo -u hdfs hadoop fs -ls /user/hive/warehouse
   
 fi
 
