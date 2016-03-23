@@ -218,12 +218,13 @@ EOF
   chmod u+x ./generate_admin.expect
   ls -la
   
-  sudo ./generate_admin.expect admin admin
+  ## For now let's disable this so we can do it manually.
+  # sudo ./generate_admin.expect admin admin
   
   echo "Done installing creating superuser"
   echo "Loading samples"
  
-  curl -L -vv -e "$(hostname):8888/accounts/login/" -D - -X GET   http://$(hostname):8888/beeswax/install_examples -d "{'username' : admin, 'password': admin }"
+  # curl -L -vv -e "$(hostname):8888/accounts/login/" -D - -X GET   http://$(hostname):8888/beeswax/install_examples -d "{'username' : admin, 'password': admin }"
   
   #sudo chmod 777 -R /tmp/logs
   # This is odd. Should remove, but let's see if my theory works
