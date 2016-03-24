@@ -212,9 +212,11 @@ expect eof
 
 EOF
 
-# thoughts: Run first and fail as Hive, then try it with Hue. That seems to work.......
+  # thoughts: Run first and fail as Hive, then try it with Hue. That seems to work.......
 
   echo "Done generating the administration creation script"
+  log "Done generating the administration creation script"
+  
   chmod u+x ./generate_admin.expect
   ls -la
   
@@ -223,6 +225,8 @@ EOF
   
   echo "Done installing creating superuser"
   echo "Loading samples"
+  log "Done installing creating superuser"
+  log "Loading samples"
  
   # curl -L -vv -e "$(hostname):8888/accounts/login/" -D - -X GET   http://$(hostname):8888/beeswax/install_examples -d "{'username' : admin, 'password': admin }"
   
@@ -235,7 +239,7 @@ EOF
 
   #sudo chmod 777 -R /tmp/logs
   echo "Should be done loading samples"
-  sudo -u hdfs hadoop fs -ls /user/hive/warehouse
+  #sudo -u hdfs hadoop fs -ls /user/hive/warehouse
   echo "Done"
 fi
 
