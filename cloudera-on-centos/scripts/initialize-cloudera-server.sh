@@ -54,7 +54,7 @@ wget http://archive.cloudera.com/cm5/redhat/6/x86_64/cm/cloudera-manager.repo -O
 n=0
 until [ $n -ge 5 ]
 do
-    yum install -y oracle-j2sdk* cloudera-manager-daemons cloudera-manager-server >> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err && break
+    yum install -y oracle-j2sdk* cloudera-manager-daemons cloudera-manager-server  >> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err && break
     n=$[$n+1]
     sleep 15s
 done
@@ -63,6 +63,17 @@ if [ $n -ge 5 ]; then log "scp error $remote, exiting..." & exit 1; fi
 #######################################################################################################################
 log "installing external DB"
 sudo yum install postgresql-server -y
+
+ls -la /usr/share/java >> /tmp/initialize-cloudera-server.log
+
+sudo yum install -y mysql-connector-java
+echo "install of mysql-connector-java had status code $?" >> /tmp/initialize-cloudera-server.log
+
+sudo yum instally -y postgresql-jdbc
+echo "install of postgresql-jdbc had status code $?" >> /tmp/initialize-cloudera-server.log
+
+ls -la /usr/share/java >> /tmp/initialize-cloudera-server.log
+
 bash install-postgresql.sh >> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
 #restart to make sure all configuration take effects
 sudo service postgresql restart
