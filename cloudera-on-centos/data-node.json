@@ -195,11 +195,6 @@
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(variables('vmName'), copyIndex())]",
-      "plan": {
-        "name": "ubuntuserver",
-        "publisher": "canonical",
-        "product": "ubuntuserver"
-      },
       "location": "[parameters('location')]",
       "copy": {
         "name": "dataNodeNicLoop",
@@ -227,10 +222,10 @@
         "storageProfile": {
           "imageReference":
           {
-            "publisher": "canonical",
-            "offer": "ubuntuserver",
-            "sku": "14.04.2-LTS",
-            "version": "14.04.201504270"
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.4-LTS",
+            "version": "latest"
           },
           "osDisk":
           {
