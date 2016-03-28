@@ -294,9 +294,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(variables('vmName'), copyIndex())]",
       "plan": {
-        "name": "ubuntuserver",
+        "name": "UbuntuServer",
         "publisher": "canonical",
-        "product": "ubuntuserver"
+        "product": "UbuntuServer"
       },
       "location": "[parameters('location')]",
       "copy": {
@@ -326,9 +326,9 @@
           "imageReference":
           {
             "publisher": "canonical",
-            "offer": "ubuntuserver",
+            "offer": "UbuntuServer",
             "sku": "14.04.2-LTS",
-            "version": "14.04.201504270"
+            "version": "14.04.201507060"
           },
           "osDisk":
           {
