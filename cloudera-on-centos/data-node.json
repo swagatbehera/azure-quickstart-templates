@@ -196,9 +196,9 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(variables('vmName'), copyIndex())]",
       "plan": {
-        "name": "cloudera-centos-6",
-        "publisher": "cloudera",
-        "product": "cloudera-centos-6"
+        "name": "ubuntuserver",
+        "publisher": "canonical",
+        "product": "ubuntuserver"
       },
       "location": "[parameters('location')]",
       "copy": {
@@ -227,10 +227,10 @@
         "storageProfile": {
           "imageReference":
           {
-            "publisher": "cloudera",
-            "offer": "cloudera-centos-6",
-            "sku": "CLOUDERA-CENTOS-6",
-            "version": "1.0.0"
+            "publisher": "canonical",
+            "offer": "ubuntuserver",
+            "sku": "14.04.2-LTS",
+            "version": "14.04.201504270"
           },
           "osDisk":
           {
