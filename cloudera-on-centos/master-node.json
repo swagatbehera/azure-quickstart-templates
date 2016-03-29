@@ -401,7 +401,7 @@
         "settings": {
           "fileUris": [
             "[concat(parameters('scriptsUri'), '/scripts/prepare-masternode-disks.sh')]",
-            "[concat(parameters('scriptsUri'), '/scripts/initialize-node.sh')]"
+            "[concat(parameters('scriptsUri'), '/scripts/initialize-node-ubuntu.sh')]"
           ],
           "commandToExecute": "[concat('sh initialize-node-ubuntu.sh \"', parameters('networkSpec').privateIPPrefix, '\" \"', parameters('dnsNamePrefix'), '\" \"', 'azure.cloudera.com', '\" ', parameters('clusterSpec').masterNodeCount, ' ', parameters('clusterSpec').dataNodeCount, ' \"', parameters('vmSpec').adminUserName, '\" ', 'masternode', ' >> /home/$ADMINUSER/initialize-masternode.log 2>&1')]"
         }
