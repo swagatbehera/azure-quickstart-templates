@@ -32,6 +32,32 @@ JOBFUNCTION=${16}
 COMPANY=${17}
 INSTALLCDH=${18}
 
+LOG_FILE="/tmp/bootstrap-cloudera.out"
+
+echo "arguments values passed..." >> ${LOG_FILE}
+echo "IPPREFIX" >> ${LOG_FILE}
+echo "$IPPREFIX" >> ${LOG_FILE}
+echo "NAMEPREFIX" >> ${LOG_FILE}
+echo "$NAMEPREFIX" >> ${LOG_FILE}
+echo "NAMESUFFIX" >> ${LOG_FILE}
+echo "$NAMESUFFIX" >> ${LOG_FILE}
+echo "MASTERNODES" >> ${LOG_FILE}
+echo "$MASTERNODES" >> ${LOG_FILE}
+echo "DATANODES" >> ${LOG_FILE}
+echo "$DATANODES" >> ${LOG_FILE}
+echo "ADMINUSER" >> ${LOG_FILE}
+echo "$ADMINUSER" >> ${LOG_FILE}
+echo "HA" >> ${LOG_FILE}
+echo "$HA" >> ${LOG_FILE}
+echo "PASSWORD" >> ${LOG_FILE}
+echo "$PASSWORD" >> ${LOG_FILE}
+echo "CMUSER" >> ${LOG_FILE}
+echo "$CMUSER" >> ${LOG_FILE}
+echo "CMPASSWORD" >> ${LOG_FILE}
+echo "$CMPASSWORD" >> ${LOG_FILE}
+echo "INSTALLCDH" >> ${LOG_FILE}
+echo "$INSTALLCDH" >> ${LOG_FILE}
+
 CLUSTERNAME=${NAMEPREFIX}
 NAMESUFFIX=$(echo $NAMESUFFIX | sed "s/^[^.]*\.//")
 

@@ -257,6 +257,8 @@ chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
 
+sudo reboot
+
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)
 #fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
