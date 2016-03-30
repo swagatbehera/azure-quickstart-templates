@@ -52,13 +52,15 @@ echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # This is done for compatibility with existing Cloud providers in our testing.
 # Make a home directory for this user
 
-useradd ${TESTUSER} -d ${TESTUSER_HOME}
+useradd -m -d ${TESTUSER_HOME} ${TESTUSER}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
 
 # Need to adjust the systest user's id higher b/c of security on YARN
+#not needed does not work
 usermod -u 2345 "${ADMINUSER}"
 
+# not needed does not work
 {
   id ${ADMINUSER};
   echo "Running as $(whoami) in $(pwd)";
@@ -80,13 +82,15 @@ sudo chown "$(whoami)" ~/.ssh
 sudo chmod 700 ~/.ssh
 
 cp /etc/resolv.conf /tmp/old_resolv.conf
-echo "nameserver 172.18.64.15" > /etc/resolv.conf
+echo "nameserver 172.18.64.15" > /etc/resolvconf/resolv.conf.d/head
+resolvconf -u
 sleep 30s
 cat /etc/resolv.conf >> ${LOG_FILE}
 
 # set the configuration to not reset /etc/resolv.conf when we restart networking
-sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
-service network restart
+# not needed for ubuntu
+#sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
+#sudo service network-manager restart
 sleep 100s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
@@ -131,14 +135,11 @@ instancename=$(echo "${hostname}" | awk -F"." '{print $1}')
 subdomain="${NAMESUFFIX}"
 
 instanceHostname="${instancename}.${subdomain}"
-echo "instanceHostname is: $instanceHostName" >> ${HOSTNAME_LOG_FILE}
-sed -i -r "s:(HOSTNAME=).*:HOSTNAME=${instanceHostname}:" /etc/sysconfig/network;
-hostname "${instancename}"."${subdomain}";
+echo "instanceHostname is:" >> ${HOSTNAME_LOG_FILE}
+echo $instanceHostname >> ${HOSTNAME_LOG_FILE}
+hostnamectl set-hostname $instanceHostname
+echo "127.0.0.1  $instanceHostname" >> /etc/hosts
 hostname >> ${HOSTNAME_LOG_FILE}
-
-sed -i "s^PEERDNS=no^PEERDNS=yes^g" /etc/sysconfig/network-scripts/ifcfg-eth0
-service network restart
-sleep 50s
 
 {
   echo "here is the ~/.ssh/ directory";
@@ -175,12 +176,12 @@ do
   chmod 777 /data${x}/impala/scratch
 done
 
+apt-get install selinux-utils -y
 setenforce 0 >> /tmp/setenforce.out
-sed -i 's^SELINUX=enforcing^SELINUX=disabled^g' /etc/selinux/config || true
 
-/etc/init.d/iptables save
-/etc/init.d/iptables stop
-chkconfig iptables off
+#selinux is disabled by default on ubuntu
+
+sudo ufw disable
 
 if which yum; then
  yum clean all
@@ -192,12 +193,11 @@ if which zypper; then
  zypp clean all
 fi
 
-yum install -y ntp
-service ntpd start
-service ntpd status
-chkconfig ntpd on
+sudo ntpdate pool.ntp.org
+sudo apt-get install ntp -y
 
-yum install -y microsoft-hyper-v
+apt-get install --install-recommends linux-virtual-lts-wily -y
+apt-get install --install-recommends linux-tools-virtual-lts-wily linux-cloud-tools-virtual-lts-wily -y
 
 echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled
 echo "echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled" | tee -a /etc/rc.local
@@ -218,6 +218,8 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
 # Set up private key for $ADMINUSER and $TESTUSER
+useradd -m -d "/home/${ADMINUSER}" ${ADMINUSER}
+mkdir /home/${ADMINUSER}
 mkdir /home/${ADMINUSER}/.ssh
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
@@ -251,6 +253,8 @@ echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Zx7QmkQF+YIYxZ3z7KeD/CJAkzijm49QHQ
 # Add jenkins credential to authorized hosts list. The problem is that all hosts need to run this before any single host 
 echo "About to publish /tmp/_jenkins.pub into authorized keys for the test user"
 cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
+chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
+chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
 
 # TODO - Find out if this is useful?
