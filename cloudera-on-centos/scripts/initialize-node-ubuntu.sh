@@ -257,7 +257,7 @@ chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
 
-sudo reboot
+sudo service networking restart
 
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)
