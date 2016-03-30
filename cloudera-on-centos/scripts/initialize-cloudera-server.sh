@@ -106,4 +106,9 @@ if $HA; then
 else
     python cmxDeployOnIbiza.py -n "${ClusterName}" -u "${User}" -p "${Password}"  -m "$mip" -w "$worker_ip" -c "${cmUser}" -s "${cmPassword}" -e -r "${EMAILADDRESS}" -b "${BUSINESSPHONE}" -f "${FIRSTNAME}" -t "${LASTNAME}" -o "${JOBROLE}" -i "${JOBFUNCTION}" -y "${COMPANY}">> /tmp/initialize-cloudera-server.log 2>> /tmp/initialize-cloudera-server.err
 fi
+
+log "Installing hive examples"
+easy_install requests # necessary for hive examples
+./install-hive-examples.py
+log "Hive examples install should be complete"
 log "END: CM deployment ended"
