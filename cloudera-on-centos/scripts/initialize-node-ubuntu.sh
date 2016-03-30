@@ -255,9 +255,7 @@ echo "About to publish /tmp/_jenkins.pub into authorized keys for the test user"
 cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
-ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}
-
-sudo service networking restart
+ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}s
 
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)
