@@ -201,8 +201,8 @@ fi
 sudo ntpdate pool.ntp.org
 sudo apt-get install ntp -y
 
-apt-get install --install-recommends linux-virtual-lts-wily -y
-apt-get install --install-recommends linux-tools-virtual-lts-wily linux-cloud-tools-virtual-lts-wily -y
+#apt-get install --install-recommends linux-virtual-lts-wily -y
+#apt-get install --install-recommends linux-tools-virtual-lts-wily linux-cloud-tools-virtual-lts-wily -y
 
 echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled
 echo "echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled" | tee -a /etc/rc.local
@@ -267,7 +267,7 @@ cat /etc/resolv.conf >> ${LOG_FILE}
 debconf-show dash >> ${LOG_FILE}
 
 echo "content of ifconfig for this machine" >> ${LOG_FILE}
-cat ifconfig >> ${LOG_FILE}
+ifconfig >> ${LOG_FILE}
 
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)

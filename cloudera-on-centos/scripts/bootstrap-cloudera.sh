@@ -85,7 +85,7 @@ addPrivateIpToNodes() {
   echo "in addprivate IP Publichostname" >> ${LOG_FILE}
   echo "$publicHostname" >> ${LOG_FILE}
   echo "content of ifconfig for this machine" >> ${LOG_FILE}
-  cat ifconfig >> ${LOG_FILE}
+  ifconfig >> ${LOG_FILE}
 
   if [[ "${2}" = "true" ]]; then
     ext="mn"
