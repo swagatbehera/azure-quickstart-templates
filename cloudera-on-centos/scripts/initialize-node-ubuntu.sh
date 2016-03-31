@@ -49,7 +49,9 @@ echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 #On ubuntu make bash as default
-sudo dpkg-reconfigure -p critical dash
+echo "dash dash/sh boolean false" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
 
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
@@ -130,7 +132,7 @@ fi
 chmod 600 ./id_rsa
 cp ./id_rsa /tmp/systest_key
 cp ./id_rsa ~/.ssh/
-cp /tmp/old_resolv.conf /etc/resolv.conf
+#cp /tmp/old_resolv.conf /etc/resolv.conf
 
 # Set the hostname
 hostname=$(hostname)
@@ -259,6 +261,10 @@ cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}s
+
+
+cat /etc/resolv.conf >> ${LOG_FILE}
+debconf-show dash >> ${LOG_FILE}
 
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)

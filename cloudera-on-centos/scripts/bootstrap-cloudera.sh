@@ -58,6 +58,11 @@ echo "$CMPASSWORD" >> ${LOG_FILE}
 echo "INSTALLCDH" >> ${LOG_FILE}
 echo "$INSTALLCDH" >> ${LOG_FILE}
 
+echo "dash dash/sh boolean false" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+cat /etc/resolv.conf >> ${LOG_FILE}
+debconf-show dash >> ${LOG_FILE}
+
 CLUSTERNAME=${NAMEPREFIX}
 NAMESUFFIX=$(echo $NAMESUFFIX | sed "s/^[^.]*\.//")
 
