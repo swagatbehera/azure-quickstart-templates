@@ -93,7 +93,7 @@ addPrivateIpToNodes() {
     ext="dn"
   fi
 
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "PrivateIP" >> ${LOG_FILE}
   echo "$privateIp" >> ${LOG_FILE}
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
