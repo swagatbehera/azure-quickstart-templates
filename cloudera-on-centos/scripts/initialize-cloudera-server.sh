@@ -109,6 +109,7 @@ fi
 
 log "Installing hive examples"
 easy_install requests # necessary for hive examples
+sudo chmod u+x ./install-hive-samples.py
 ./install-hive-examples.py
 log "Hive examples install should be complete"
 log "END: CM deployment ended"

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import logging
 import requests
+import socket
 import time
 
 LOG = logging.getLogger(__name__)
@@ -167,7 +168,7 @@ class HUE(object):
   def get_hue_server_hosts_and_ports():
     hosts_and_ports = []
 
-    hosts_and_ports.append(("dnspfx2a-mn0.azure.cloudera.com", 8888))
+    hosts_and_ports.append((socket.gethostname(), 8888))
     return hosts_and_ports
 
   def get_session_for_url(self, url):
