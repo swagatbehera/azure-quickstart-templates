@@ -266,6 +266,9 @@ ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}s
 cat /etc/resolv.conf >> ${LOG_FILE}
 debconf-show dash >> ${LOG_FILE}
 
+echo "content of ifconfig for this machine" >> ${LOG_FILE}
+cat ifconfig >> ${LOG_FILE}
+
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)
 #fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
