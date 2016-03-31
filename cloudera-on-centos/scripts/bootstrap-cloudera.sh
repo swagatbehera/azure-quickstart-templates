@@ -76,6 +76,8 @@ addPrivateIpToNodes() {
 
   publicHostname=${1}
   isMasterNode=${2}
+  echo "in addprivate IP Publichostname" >> ${LOG_FILE}
+  echo "$publicHostname" >> ${LOG_FILE}
 
   if [[ "${2}" = "true" ]]; then
     ext="mn"
@@ -83,7 +85,9 @@ addPrivateIpToNodes() {
     ext="dn"
   fi
 
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  echo "PrivateIP" >> ${LOG_FILE}
+  echo "$privateIp" >> ${LOG_FILE}
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
@@ -103,6 +107,8 @@ let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
   publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
+  echo "PublicHostName" >> ${LOG_FILE}
+  echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
   addPrivateIpToNodes "${publicHostname}" true
 done
@@ -111,6 +117,8 @@ let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
   publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
+  echo "PublicHostName" >> ${LOG_FILE}
+  echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
   addPrivateIpToNodes "${publicHostname}" false
 done
