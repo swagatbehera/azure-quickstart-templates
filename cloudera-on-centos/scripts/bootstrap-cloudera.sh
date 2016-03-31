@@ -32,7 +32,7 @@ JOBFUNCTION=${16}
 COMPANY=${17}
 INSTALLCDH=${18}
 
-LOG_FILE="/tmp/bootstrap-cloudera.out"
+LOG_FILE="/tmp/bootstrap-cloudera1.out"
 
 echo "arguments values passed..." >> ${LOG_FILE}
 echo "IPPREFIX" >> ${LOG_FILE}

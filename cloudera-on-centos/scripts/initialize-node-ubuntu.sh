@@ -48,6 +48,9 @@ sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+#On ubuntu make bash as default
+sudo dpkg-reconfigure -p critical dash
+
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
 # Make a home directory for this user
