@@ -79,6 +79,7 @@ log() {
 
 addPrivateIpToNodes() {
 
+  sleep 45s
   publicHostname=${1}
   isMasterNode=${2}
   echo "in addprivate IP Publichostname" >> ${LOG_FILE}
