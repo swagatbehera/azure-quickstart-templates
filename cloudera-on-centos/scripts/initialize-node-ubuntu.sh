@@ -143,7 +143,7 @@ instanceHostname="${instancename}.${subdomain}"
 echo "instanceHostname is:" >> ${HOSTNAME_LOG_FILE}
 echo $instanceHostname >> ${HOSTNAME_LOG_FILE}
 hostnamectl set-hostname $instanceHostname
-echo "127.0.0.1  $instanceHostname" >> /etc/hosts
+#echo "127.0.0.1  $instanceHostname" >> /etc/hosts
 hostname >> ${HOSTNAME_LOG_FILE}
 
 {
