@@ -114,7 +114,7 @@ NODES=()
 let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
-  publicHostname=${NAMEPREFIX}-mn$i.${CLOUDERA_DOMAIN}
+  publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
   echo "PublicHostName" >> ${LOG_FILE}
   echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
@@ -124,7 +124,7 @@ done
 let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
-  publicHostname=${NAMEPREFIX}-dn$i.${CLOUDERA_DOMAIN}
+  publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
   echo "PublicHostName" >> ${LOG_FILE}
   echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
@@ -193,7 +193,7 @@ do
   fi
 
   echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${CLOUDERA_DOMAIN}."
-  #ssh -n -o "StrictHostKeyChecking=no" -i .ssh/id_rsa systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
+  ssh -n -o "StrictHostKeyChecking=no" -i .ssh/id_rsa systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
 done < /etc/hosts
 
 if [ "${INSTALLCDH}" == "True" ]
