@@ -94,16 +94,16 @@ addPrivateIpToNodes() {
   fi
 
   echo "ifconfig details:" >> ${LOG_FILE}
-  s=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'ls -al')
+  s=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'ls -al')
   echo "$s"  >> ${LOG_FILE}
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "PrivateIP" >> ${LOG_FILE}
   echo "$privateIp" >> ${LOG_FILE}
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
     sleep 25s
-    privateIp=$(ssh -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+    privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
     echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> ${BOOTSTRAP_LOG}
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-${ext}${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-${ext}${i} \" >> ${BOOTSTRAP_LOG}"
