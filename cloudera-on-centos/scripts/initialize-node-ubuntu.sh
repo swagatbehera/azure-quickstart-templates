@@ -52,6 +52,9 @@ echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 echo "dash dash/sh boolean false" | debconf-set-selections
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 
+# Necessary for adding these hosts to Cloudera's internal DNS
+CLOUDERA_DNS_IP="10.17.181.104"
+CLOUDERA_DOMAIN="azure.cloudera.com"
 
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
@@ -268,6 +271,15 @@ debconf-show dash >> ${LOG_FILE}
 
 echo "content of ifconfig for this machine" >> ${LOG_FILE}
 ifconfig >> ${LOG_FILE}
+
+# Get the private IP address from the ifconfig file
+privateIp=$(ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g")
+echo "Private IP is "
+echo "$privateIp" >> ${LOG_FILE}
+
+# assciate the ip, hostname with the dns
+ssh -n -o "StrictHostKeyChecking=no" -i .ssh/id_rsa systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${instanceHostname} ${privateIp} ${CLOUDERA_DOMAIN}"
+
 
 # TODO - Find out if this is useful?
 #myhostname=$(hostname)
