@@ -94,16 +94,16 @@ addPrivateIpToNodes() {
   fi
 
   echo "ifconfig details:" >> ${LOG_FILE}
-  s=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'ls -al')
+  s=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${publicHostname}" -x 'ls -al')
   echo "$s"  >> ${LOG_FILE}
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}//.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "PrivateIP" >> ${LOG_FILE}
   echo "$privateIp" >> ${LOG_FILE}
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
     sleep 25s
-    privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/systest/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
+    privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | cut -d" " -f 12 | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
     echo "Second attempt at private ip for ${publicHostname} produced: ${privateIp}" >> ${BOOTSTRAP_LOG}
   fi
   echo "Adding to nodes: \"${privateIp}:${NAMEPREFIX}-${ext}${i}.${CLOUDERA_DOMAIN}:${NAMEPREFIX}-${ext}${i} \" >> ${BOOTSTRAP_LOG}"
@@ -169,14 +169,14 @@ do
   fi
 
   echo "host: ${host}" >> ${BOOTSTRAP_LOG}
-  scp -o "StrictHostKeyChecking=false" -i .ssh/id_rsa /etc/hosts "${ADMINUSER}@${host}":"/home/${ADMINUSER}/hosts"
+  scp -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa /etc/hosts "${ADMINUSER}@${host}":"/home/${ADMINUSER}/hosts"
   echo "done scping to host: ${host}" >> ${BOOTSTRAP_LOG}
 
-  ssh -n -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${host}" -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
+  ssh -n -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${host}" -x "sudo cp /home/${ADMINUSER}/hosts /etc/hosts; sudo chown root /etc/hosts; sudo chmod 644 /etc/hosts"
   echo "done setting /etc/hosts on host: ${host}" >> ${BOOTSTRAP_LOG}
 
   # set /etc/resolv.conf
-  # ssh -n -o "StrictHostKeyChecking=false" -i .ssh/id_rsa systest@"${host}" -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
+  # ssh -n -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${host}" -x "sudo echo 'nameserver 172.18.64.15' | sudo tee /etc/resolv.conf; sudo sed -i 's^PEERDNS=yes^PEERDNS=no^g' /etc/sysconfig/network-scripts/ifcfg-eth0; sudo service network restart;"
   # echo "done with long command on /etc/hosts on host: ${host}" >> ${BOOTSTRAP_LOG}
 
 done < /etc/hosts
@@ -196,14 +196,14 @@ do
   fi
 
   echo "About to associate ${shortname}.${NAMESUFFIX} to ip ${ip} on domain ${CLOUDERA_DOMAIN}."
-  ssh -n -o "StrictHostKeyChecking=no" -i .ssh/id_rsa systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
+  ssh -n -o "StrictHostKeyChecking=no" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${CLOUDERA_DNS_IP}" -x "./bin/update_dns_multi ${shortname}.${CLOUDERA_DOMAIN} ${ip} ${CLOUDERA_DOMAIN}"
 done < /etc/hosts
 
 if [ "${INSTALLCDH}" == "True" ]
 then
 
   # This key should have been set by initialize-node.sh
-  key="/home/${ADMINUSER}/.ssh/id_rsa"
+  key="/home/${ADMINUSER}//home/${ADMINUSER}/.ssh/id_rsa"
 
   ### Assume /etc/hosts is correct and set
   # Get management node
