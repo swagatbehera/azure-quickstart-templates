@@ -24,22 +24,6 @@ DATANODES=$5
 ADMINUSER=$6
 NODETYPE=$7
 
-echo "arguments values passed..." >> ${LOG_FILE}
-echo "IPPREFIX" >> ${LOG_FILE}
-echo "$IPPREFIX" >> ${LOG_FILE}
-echo "NAMEPREFIX" >> ${LOG_FILE}
-echo "$NAMEPREFIX" >> ${LOG_FILE}
-echo "NAMESUFFIX" >> ${LOG_FILE}
-echo "$NAMESUFFIX" >> ${LOG_FILE}
-echo "MASTERNODES" >> ${LOG_FILE}
-echo "$MASTERNODES" >> ${LOG_FILE}
-echo "DATANODES" >> ${LOG_FILE}
-echo "$DATANODES" >> ${LOG_FILE}
-echo "ADMINUSER" >> ${LOG_FILE}
-echo "$ADMINUSER" >> ${LOG_FILE}
-echo "NODETYPE" >> ${LOG_FILE}
-echo "$NODETYPE" >> ${LOG_FILE}
-
 TESTUSER="jenkins"
 TESTUSER_HOME=/var/lib/${TESTUSER}
 
@@ -48,29 +32,16 @@ sed -i '/Defaults[[:space:]]\+!*requiretty/s/^/#/' /etc/sudoers
 echo "${ADMINUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 echo "${TESTUSER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-#On ubuntu make bash as default
+# On Ubuntu make bash as default
 echo "dash dash/sh boolean false" | debconf-set-selections
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
-
 
 # For testing purposes, we will also have a user called 'Jenkins'.
 # This is done for compatibility with existing Cloud providers in our testing.
 # Make a home directory for this user
-
 useradd -m -d ${TESTUSER_HOME} ${TESTUSER}
 chown ${TESTUSER} ${TESTUSER_HOME}
 chmod 755 ${TESTUSER_HOME}
-
-# Need to adjust the systest user's id higher b/c of security on YARN
-#not needed does not work
-usermod -u 2345 "${ADMINUSER}"
-
-# not needed does not work
-{
-  id ${ADMINUSER};
-  echo "Running as $(whoami) in $(pwd)";
-  echo "Perms on this directory are $(ls -la .)";
-} >> ${LOG_FILE}
 
 # Verify that the directory necessary for the private key is available
 ls -la ~/.ssh
@@ -92,11 +63,6 @@ resolvconf -u
 sleep 30s
 cat /etc/resolv.conf >> ${LOG_FILE}
 
-# set the configuration to not reset /etc/resolv.conf when we restart networking
-# not needed for ubuntu
-#sed -i "s^PEERDNS=yes^PEERDNS=no^g" /etc/sysconfig/network-scripts/ifcfg-eth0
-#sudo service network-manager restart
-sleep 100s
 wget --no-dns-cache http://github.mtv.cloudera.com/raw/QE/smokes/cdh5/common/src/main/resources/systest/id_rsa
 statusCode=$?
 if [[ "${statusCode}" != "0" ]]; then
@@ -120,7 +86,6 @@ if [[ "${statusCode}" != "0" ]]; then
   ls -la >> ${LOG_FILE}
   set +e
 else
-
   # Also pull down the test user public key
   set -e
   wget --no-dns-cache http://github.mtv.cloudera.com/Kitchen/sshkeys/raw/master/_jenkins.pub
@@ -129,21 +94,19 @@ else
   set +e
 fi
 
+# Set the permissions for the systest key
 chmod 600 ./id_rsa
 cp ./id_rsa /tmp/systest_key
 cp ./id_rsa ~/.ssh/
-#cp /tmp/old_resolv.conf /etc/resolv.conf
 
 # Set the hostname
 hostname=$(hostname)
 instancename=$(echo "${hostname}" | awk -F"." '{print $1}')
 subdomain="${NAMESUFFIX}"
-
 instanceHostname="${instancename}.${subdomain}"
 echo "instanceHostname is:" >> ${HOSTNAME_LOG_FILE}
 echo $instanceHostname >> ${HOSTNAME_LOG_FILE}
 hostnamectl set-hostname $instanceHostname
-#echo "127.0.0.1  $instanceHostname" >> /etc/hosts
 hostname >> ${HOSTNAME_LOG_FILE}
 
 {
@@ -152,13 +115,13 @@ hostname >> ${HOSTNAME_LOG_FILE}
   echo "done listing the ~/.ssh/ directory";
 } >> ${LOG_FILE}
 
+
 # Mount and format the attached disks base on node type
 if [ "$NODETYPE" == "masternode" ]
 then
   echo "preparing master node" >> ${LOG_FILE}
   bash ./prepare-masternode-disks.sh
   echo "preparing master node exited with code $?" >> ${LOG_FILE}
-
 elif [ "$NODETYPE" == "datanode" ]
 then
   echo "preparing data node" >> ${LOG_FILE}
@@ -169,8 +132,10 @@ else
   bash ./prepare-datanode-disks.sh
 fi
 
+
 echo "Done preparing disks.  Now ls -la looks like this:" >> ${LOG_FILE}
 ls -la / >> ${LOG_FILE}
+
 # Create Impala scratch directory
 numDataDirs=$(ls -la / | grep data | wc -l)
 echo "numDataDirs: ${numDataDirs}" >> ${LOG_FILE}
@@ -181,11 +146,10 @@ do
   chmod 777 /data${x}/impala/scratch
 done
 
+# Install selinux utils
 apt-get install selinux-utils -y
 setenforce 0 >> /tmp/setenforce.out
-
 #selinux is disabled by default on ubuntu
-
 sudo ufw disable
 
 if which yum; then
@@ -198,12 +162,16 @@ if which zypper; then
  zypp clean all
 fi
 
+# Install ntp
 sudo ntpdate pool.ntp.org
 sudo apt-get install ntp -y
 
+# Deliberately not installing the below
+# might need to revisit if performance is slow
 #apt-get install --install-recommends linux-virtual-lts-wily -y
 #apt-get install --install-recommends linux-tools-virtual-lts-wily linux-cloud-tools-virtual-lts-wily -y
 
+# Some other configs
 echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled
 echo "echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled" | tee -a /etc/rc.local
 echo vm.swappiness=1 | tee -a /etc/sysctl.conf
@@ -228,24 +196,19 @@ mkdir /home/${ADMINUSER}
 mkdir /home/${ADMINUSER}/.ssh
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh
 chmod 700 /home/${ADMINUSER}/.ssh
-
 mkdir ${TESTUSER_HOME}/.ssh
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh
 chmod 700 ${TESTUSER_HOME}/.ssh
-
 ssh-keygen -y -f /var/lib/waagent/*.prv > /home/${ADMINUSER}/.ssh/authorized_keys
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/authorized_keys
 chmod 600 /home/${ADMINUSER}/.ssh/authorized_keys
-
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
-
 cp /tmp/systest_key /home/${ADMINUSER}/.ssh/id_rsa
 echo "copy operation had result $?" >> ${LOG_FILE}
 chown ${ADMINUSER} /home/${ADMINUSER}/.ssh/id_rsa
 echo "adjust perms operation had result $?" >> ${LOG_FILE}
 sudo chmod 600 /home/${ADMINUSER}/.ssh/id_rsa
-
 cp /tmp/systest_key ${TESTUSER_HOME}/.ssh/id_rsa
 echo "copy operation had result $?" >> ${LOG_FILE}
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/id_rsa
@@ -261,16 +224,3 @@ cat /tmp/_jenkins.pub >> ${TESTUSER_HOME}/.ssh/authorized_keys
 chown ${TESTUSER} ${TESTUSER_HOME}/.ssh/authorized_keys
 chmod 600 ${TESTUSER_HOME}/.ssh/authorized_keys
 ls -la ${TESTUSER_HOME}/.ssh >> ${LOG_FILE}s
-
-
-cat /etc/resolv.conf >> ${LOG_FILE}
-debconf-show dash >> ${LOG_FILE}
-
-echo "content of ifconfig for this machine" >> ${LOG_FILE}
-ifconfig >> ${LOG_FILE}
-
-# TODO - Find out if this is useful?
-#myhostname=$(hostname)
-#fqdnstring=$(python -c "import socket; print socket.getfqdn('$myhostname')")
-#sed -i "s/.*HOSTNAME.*/HOSTNAME=${fqdnstring}/g" /etc/sysconfig/network
-#/etc/init.d/network restart

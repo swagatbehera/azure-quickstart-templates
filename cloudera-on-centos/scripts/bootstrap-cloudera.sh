@@ -32,32 +32,7 @@ JOBFUNCTION=${16}
 COMPANY=${17}
 INSTALLCDH=${18}
 
-LOG_FILE="/tmp/bootstrap-cloudera1.out"
-
-echo "arguments values passed..." >> ${LOG_FILE}
-echo "IPPREFIX" >> ${LOG_FILE}
-echo "$IPPREFIX" >> ${LOG_FILE}
-echo "NAMEPREFIX" >> ${LOG_FILE}
-echo "$NAMEPREFIX" >> ${LOG_FILE}
-echo "NAMESUFFIX" >> ${LOG_FILE}
-echo "$NAMESUFFIX" >> ${LOG_FILE}
-echo "MASTERNODES" >> ${LOG_FILE}
-echo "$MASTERNODES" >> ${LOG_FILE}
-echo "DATANODES" >> ${LOG_FILE}
-echo "$DATANODES" >> ${LOG_FILE}
-echo "ADMINUSER" >> ${LOG_FILE}
-echo "$ADMINUSER" >> ${LOG_FILE}
-echo "HA" >> ${LOG_FILE}
-echo "$HA" >> ${LOG_FILE}
-echo "PASSWORD" >> ${LOG_FILE}
-echo "$PASSWORD" >> ${LOG_FILE}
-echo "CMUSER" >> ${LOG_FILE}
-echo "$CMUSER" >> ${LOG_FILE}
-echo "CMPASSWORD" >> ${LOG_FILE}
-echo "$CMPASSWORD" >> ${LOG_FILE}
-echo "INSTALLCDH" >> ${LOG_FILE}
-echo "$INSTALLCDH" >> ${LOG_FILE}
-
+# Make bash as default
 echo "dash dash/sh boolean false" | debconf-set-selections
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 cat /etc/resolv.conf >> ${LOG_FILE}
@@ -79,26 +54,15 @@ log() {
 
 addPrivateIpToNodes() {
 
-  sleep 45s
   publicHostname=${1}
   isMasterNode=${2}
-  echo "in addprivate IP Publichostname" >> ${LOG_FILE}
-  echo "$publicHostname" >> ${LOG_FILE}
-  echo "content of ifconfig for this machine" >> ${LOG_FILE}
-  ifconfig >> ${LOG_FILE}
-
   if [[ "${2}" = "true" ]]; then
     ext="mn"
   else
     ext="dn"
   fi
 
-  echo "ifconfig details:" >> ${LOG_FILE}
-  s=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${publicHostname}" -x 'ls -al')
-  echo "$s"  >> ${LOG_FILE}
-  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}//.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
-  echo "PrivateIP" >> ${LOG_FILE}
-  echo "$privateIp" >> ${LOG_FILE}
+  privateIp=$(ssh -o "StrictHostKeyChecking=false" -i /home/${ADMINUSER}/.ssh/id_rsa systest@"${publicHostname}" -x 'sudo ifconfig | grep inet | awk "{ print \$2 }" | grep "addr:1" | grep -v "127.0.0.1" | sed "s^addr:^^g"')
   echo "${publicHostname} : ${privateIp}" >> /tmp/privateIps
   if [[ "${privateIp}" = "" ]]; then
     echo "Could not get a privateIp from one of the master nodes. Waiting and then trying" >> ${BOOTSTRAP_LOG}
@@ -118,8 +82,6 @@ let "NAMEEND=MASTERNODES-1" || true
 for i in $(seq 0 $NAMEEND)
 do
   publicHostname=${NAMEPREFIX}-mn$i.${NAMESUFFIX}
-  echo "PublicHostName" >> ${LOG_FILE}
-  echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
   addPrivateIpToNodes "${publicHostname}" true
 done
@@ -128,8 +90,6 @@ let "DATAEND=DATANODES-1" || true
 for i in $(seq 0 $DATAEND)
 do
   publicHostname=${NAMEPREFIX}-dn$i.${NAMESUFFIX}
-  echo "PublicHostName" >> ${LOG_FILE}
-  echo "$publicHostname" >> ${LOG_FILE}
   echo "publicHostname is: ${publicHostname}" >> /tmp/publicHostNames
   addPrivateIpToNodes "${publicHostname}" false
 done
